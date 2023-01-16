@@ -1,6 +1,6 @@
 version: '2'
 services:
-  database_mysql:
+  prometheus_data:
     image: mysql
     restart: always
     ports:
@@ -13,6 +13,7 @@ services:
     volumes:
       - ./DataStorage/database.sql:/docker-entrypoint-initdb.d/database.sql
       - db_data:/var/lib/mysql
+    container_name: db
 volumes:
   db_data:
 
