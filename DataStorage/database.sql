@@ -1,6 +1,6 @@
 CREATE DATABASE IF NOT EXISTS prometheus_data
 
-USE DATABASE prometheus_data
+USE prometheus_data
 
 CREATE TABLE IF NOT EXISTS datas (
     ID_metrica int(11) NOT NULL AUTO_INCREMENT
