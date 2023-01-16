@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 prom = PrometheusConnect(url="http://15.160.61.227:29090", disable_ssl=True)
 
 #prova commit
+#prova commit 2
 
 #%%---------------CALCOLO SET DI METADATI-----------------------------------------------------------------------------------------------
 #prende a partire da ora, la metrica, nei 10 minuti passati, avaibleMem relativa ai nodi con job = summary. Campiona 
