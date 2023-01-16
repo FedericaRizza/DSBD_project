@@ -1,0 +1,3 @@
+pip install prometheus-api-client
+
+python -m pip install statsmodels
