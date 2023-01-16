@@ -1,0 +1,21 @@
+version: '2'
+services:
+  database_mysql:
+    image: mysql
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: database_mysql
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - ./DataStorage/database.sql:/docker-entrypoint-initdb.d/databse.sql
+      - db_data:/var/lib/mysql
+volumes:
+  db_data  
+
+            
+            
+            
