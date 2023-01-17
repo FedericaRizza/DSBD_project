@@ -76,8 +76,9 @@ plt.plot(result.seasonal.iloc[:250],"--", label = 'ts_s')
 plt.plot(result.resid.iloc[:250],".", label = 'ts_err')
 plt.legend(title='Series')
 
-plt.show()
+#plt.show()
 
+#%%------------------------------FORECASTING---------------------------------------
 #tsr = ts.resample(rule='T').mean()
 #print("indici resample: ", tsr.index) #vediamo se ci da la frequenza
 #print(tsr)
@@ -101,6 +102,13 @@ tsmodel = ExponentialSmoothing(train_data, trend='add', seasonal=None).fit()
 
 prediction = tsmodel.forecast(10)
 #prediction
+
+#error evaluation: confronto gli errori con la deviazione standard, se err<std buon modello(?)
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+import numpy as np
+error_list= [mean_absolute_error(test_data.iloc[:prediction.size], prediction), mean_squared_error(test_data.iloc[:prediction.size],prediction), np.sqrt(mean_squared_error(test_data.iloc[:prediction.size], prediction)), test_data.describe(), test_data.values.std()]
+for j in range(len(error_list)):
+    print(error_list[j])
 
 plt.figure(figsize=(20,10))
 #add axes labels and a title
