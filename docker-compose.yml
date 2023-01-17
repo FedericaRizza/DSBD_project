@@ -1,20 +1,21 @@
 version: '2'
 services:
-  database_mysql:
+  prometheus_data:
     image: mysql
     restart: always
     ports:
-      - 3306:3306
+      - 3307:3306
     environment:
-      MYSQL_DATABASE: database_mysql
+      MYSQL_DATABASE: prometheus_data
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_ROOT_PASSWORD: password
     volumes:
-      - ./DataStorage/database.sql:/docker-entrypoint-initdb.d/databse.sql
+      - ./DataStorage/database.sql:/docker-entrypoint-initdb.d/database.sql
       - db_data:/var/lib/mysql
+    container_name: db
 volumes:
-  db_data  
+  db_data:
 
             
             
