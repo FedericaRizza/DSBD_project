@@ -1,5 +1,6 @@
 version: '2'
 services:
+
   prometheus_data:
     image: mysql
     restart: always
@@ -14,6 +15,56 @@ services:
       - ./DataStorage/database.sql:/docker-entrypoint-initdb.d/database.sql
       - db_data:/var/lib/mysql
     container_name: db
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    container_name: zookeeper
+
+  broker_kafka:
+    image: confluentinc/cp-kafka:latest
+    ports:
+      - 29092:29092
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker_kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    container_name: broker_kafka
+  
+  init_kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - broker_kafka
+    entrypoint: ['/bin/sh', '-c']
+    command: |
+      "
+      kafka-topics --bootstrap-server broker_kafka:9092 --list
+
+      echo -e 'creazione del topic...'
+      kafka-topics --create --replication-factor 1 --partitions 1 --topic prometheusdata --bootstrap-server broker_kafka:9092 --if-not-exists
+
+      kafka-topics --bootstrap-server broker_kafka:9092 --list
+      "
+    tty: true
+    stdin_open: true
+  
+  etl_datapipeline:
+    image: etl_datapipeline
+    depends_on:
+      - broker_kafka
+    volumes:
+      - "./ETLdatapipeline:/file"
+    command: ["/file/ETLDataPipeline.py"]
+    tty: true
+    stdin_open: true
+    container_name: etl_datapipeline
 volumes:
   db_data:
 

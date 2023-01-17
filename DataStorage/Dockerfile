@@ -3,8 +3,5 @@ RUN pip install prometheus_api_client confluent-kafka
 
 WORKDIR /usr/src/app
 
-
-COPY ETLDataPipeline.py .
-
-ENTRYPOINT [ "python" ]
-CMD ["ETLDataPipeline.py"]
+ENTRYPOINT ["python"]
+CMD ["DataStorage.py"]
