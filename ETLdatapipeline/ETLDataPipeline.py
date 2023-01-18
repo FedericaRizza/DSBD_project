@@ -6,15 +6,22 @@ from prometheus_api_client.utils import parse_datetime
 from confluent_kafka import Producer, KafkaError, KafkaException
 import json
 import time
+import sys
 
 
 import pandas as pd
 import matplotlib.pyplot as plt
 #%matplotlib inline
 
+def delivery_callback(err, msg):
+        if err:
+            sys.stderr.write('%% Message failed delivery: %s\n' % err)
+        else:
+            sys.stderr.write('%% Message delivered to %s, partition[%d] @ %d\n' %
+                             (msg.topic(), msg.partition(), msg.offset()))
 
-configuration = {'bootstrap.servers': 'broker_kafka:29092'}
-topic = "prometheusdata"
+configuration = {'bootstrap.servers': 'broker_kafka:9092'}
+topic = "prometheusdata" 
 
 try: 
     producer = Producer(**configuration)
@@ -64,58 +71,59 @@ print("metriche ricevute!")
 
 #---------------PUNTO 2: calcoli il valore di max, min, avg, dev_std della metriche per 1h,3h, 12h --------------------
 
-for i in metric_data:
-    metric_rdf = MetricRangeDataFrame(i)
-    metric_rdf_1h = metric_rdf.last("1h")
-    min1 = metric_rdf_1h['value'].min()
-    max1 = metric_rdf_1h['value'].max()
-    avg1 = metric_rdf_1h['value'].mean()
-    dev_std1 = metric_rdf_1h['value'].std()
-    print('max1h:', max1,'min1h:', min1, 'media1h:',  avg1, 'deviazione standard1h:', dev_std1, "\n")
-    metric_rdf_3h = metric_rdf.last("3h")
-    min3 = metric_rdf_3h['value'].min()
-    max3 = metric_rdf_3h['value'].max()
-    avg3 = metric_rdf_3h['value'].mean()
-    dev_std3 = metric_rdf_3h['value'].std()
-    print('max3h:', max3,'min3h:', min3, 'media3h:',  avg3, 'deviazione standard3h:', dev_std3, "\n")
-    metric_rdf_12h = metric_rdf.last("12h")
-    min12 = metric_rdf_12h['value'].min()
-    max12 = metric_rdf_12h['value'].max()
-    avg12 = metric_rdf_12h['value'].mean()
-    dev_std12 = metric_rdf_12h['value'].std()
-    print('max12h:', max12,'min12h:', min12, 'media12h:',  avg12, 'deviazione standard12h:', dev_std12, "\n")
-    dati_dictionary = {
-        "metric_name" : i, 
-        "max_1h" : max1,
-        "max_3h" : max3,
-        "max_12h" : max12,
-        "min_1h" : min1,
-        "min_3h" : min3,
-        "min_12h" : min12,
-        "avg_1h" : avg1,
-        "avg_3h" : avg3,
-        "avg_12h" : avg12,
-        "devstd_1h" : dev_std1,
-        "devstd_2h" : dev_std3,
-        "devstd_3h" : dev_std12,
-        "max_predicted" : 40.0, #valore a caso per provare
-        "min_predicted" : 2.0, #valore a caso per provare
-        "avg_predicted" : 24.0, #valore a caso per provare
-        "autocorrelazione" : 11.1, #valore a caso per provare, avevo messo float nel db
-        "stazionarieta" : 10.0, #avevo messo float nel db, per il momento è una prova
-        "stagionalita" :    12.1 #//
-    }
-    
+while True:
+    for i in metric_data:
+        metric_rdf = MetricRangeDataFrame(i)
+        metric_rdf_1h = metric_rdf.last("1h")
+        min1 = metric_rdf_1h['value'].min()
+        max1 = metric_rdf_1h['value'].max()
+        avg1 = metric_rdf_1h['value'].mean()
+        dev_std1 = metric_rdf_1h['value'].std()
+        print('max1h:', max1,'min1h:', min1, 'media1h:',  avg1, 'deviazione standard1h:', dev_std1, "\n")
+        metric_rdf_3h = metric_rdf.last("3h")
+        min3 = metric_rdf_3h['value'].min()
+        max3 = metric_rdf_3h['value'].max()
+        avg3 = metric_rdf_3h['value'].mean()
+        dev_std3 = metric_rdf_3h['value'].std()
+        print('max3h:', max3,'min3h:', min3, 'media3h:',  avg3, 'deviazione standard3h:', dev_std3, "\n")
+        metric_rdf_12h = metric_rdf.last("12h")
+        min12 = metric_rdf_12h['value'].min()
+        max12 = metric_rdf_12h['value'].max()
+        avg12 = metric_rdf_12h['value'].mean()
+        dev_std12 = metric_rdf_12h['value'].std()
+        print('max12h:', max12,'min12h:', min12, 'media12h:',  avg12, 'deviazione standard12h:', dev_std12, "\n")
+        dati_dictionary = {
+            "metric_name" : metric_rdf['name'], 
+            "max_1h" : max1,
+            "max_3h" : max3,
+            "max_12h" : max12,
+            "min_1h" : min1,
+            "min_3h" : min3,
+            "min_12h" : min12,
+            "avg_1h" : avg1,
+            "avg_3h" : avg3,
+            "avg_12h" : avg12,
+            "devstd_1h" : dev_std1,
+            "devstd_3h" : dev_std3,
+            "devstd_12h" : dev_std12,
+            "max_predicted" : 40.0, #valore a caso per provare
+            "min_predicted" : 2.0, #valore a caso per provare
+            "avg_predicted" : 24.0, #valore a caso per provare
+            "autocorrelazione" : 11.1, #valore a caso per provare, avevo messo float nel db
+            "stazionarieta" : 10.0, #avevo messo float nel db, per il momento è una prova
+            "stagionalita" :    12.1 #//
+        }
+        
 
-    try:
-        producer.produce(topic, value = json.dumps(dati_dictionary))
-    except BufferError:
-        print('%% coda piena! (%d messaggi in attesa): riprova\n' % len(producer))
-    except KafkaException as e:
-        print("Errore: ",e)
-    producer.poll(0) #timeout impostato su 0 quindi la poll ritorna immediatamente
+        try:
+            producer.produce(topic, value = json.dumps(dati_dictionary) , callback = delivery_callback)
+        except BufferError:
+            print('%% coda piena! (%d messaggi in attesa): riprova\n' % len(producer))
+        except KafkaException as e:
+            print("Errore: ",e)
+        producer.poll(0) #timeout impostato su 0 quindi la poll ritorna immediatamente
 
-time.sleep(60)
+    time.sleep(10)
 
 #%%---------------PUNTO 3: PREDIZIONE DI MAX, MIN, AVG NEI SUCCESSIVI 10MIN---------------------------------------------------------------------
 '''metric_object_list = MetricsList(metric_data)

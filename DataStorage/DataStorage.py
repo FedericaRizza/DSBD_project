@@ -1,18 +1,34 @@
 from confluent_kafka import Consumer
 import json
 import mysql.connector
+import time
 
-db = mysql.connector.connect(
-  host = "localhost",
-  user = "user",
-  password = "password",
-  database="prometheus_data"
-)
+while True:
+    try:
+        db = mysql.connector.connect(
+        host = "db",
+        user = "user",
+        password = "password",
+        database="prometheus_data"
+        )
+        break
+    except Exception as sqlerr:
+        print("Errore: ", sqlerr)
+        time.sleep(10)
+
+'''def execute_query(connection, query):
+    cursor = connection.cursor()
+    try:
+        cursor.execute(query)
+        connection.commit()
+        print("Query successful")
+    except Error as err:
+        print(f"Error: '{err}'")'''
 
 consumer = Consumer({
-    'bootstrap.servers': 'localhost:29092',
+    'bootstrap.servers': 'broker_kafka:9092',
     'group.id': 'DataStorage',
-    'auto.offset.reset': 'latest' 
+    'auto.offset.reset': 'earliest' 
 })
 
 #Creating an instance of 'cursor' class
@@ -39,18 +55,21 @@ try:
             #record_key = msg.key()
             record_value = msg.value()
             data = json.loads(record_value) #ritorna un dictionary?
-            sql = """INSERT INTO datas 
-                    (ID_metrica, 
+            sql = """INSERT INTO datas ( 
                     max_1h, max_3h, max_12h,
                     min_1h, min_3h, min_12h,
                     avg_1h, avg_3h, avg_12h,
                     devstd_1h, devstd_3h, devstd_12h,
                     max_predicted, min_predicted, avg_predicted,
                     autocorrelazione, stazionarieta, stagionalita)
-                    VALUES (%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f);"""
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+            #provare a cambiare inset in qualcosa che lo aggiorna, devo inserire la prima volta e poi per le stessa metrica 
             val = (data['max_1h'], data['max_3h'], data['max_12h'], data['min_1h'], data['min_3h'], data['min_12h'], data['avg_1h'], data['avg_3h'],
-             data['avg_12h'], data['devstd_1h'], data['devstd_3h'], data['devstd_12h'], data['max_predicted'], data['min_predicted'], data['avg_predicted'], data['autocorrelazione'], data['stazionarieta'], data['stagionalita'])
-            cursor.execute(sql,val)
+            data['avg_12h'], data['devstd_1h'], data['devstd_3h'], data['devstd_12h'], data['max_predicted'], data['min_predicted'], data['avg_predicted'], data['autocorrelazione'], data['stazionarieta'], data['stagionalita'])
+            #print(val)
+            cursor.execute(sql, val) #controllare se lancia eccezioni e controllare
+            db.commit()
+            print("Inserito!")
             #count = data['count']
             #total_count += count
             #print("Consumed record with key {} and value {}, and updated total count to {}".format(record_key, record_value, total_count))
