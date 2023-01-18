@@ -64,9 +64,6 @@ print("metriche ricevute!")
 
 #---------------PUNTO 2: calcoli il valore di max, min, avg, dev_std della metriche per 1h,3h, 12h --------------------
 
-
-
-
 for i in metric_data:
     metric_rdf = MetricRangeDataFrame(i)
     metric_rdf_1h = metric_rdf.last("1h")

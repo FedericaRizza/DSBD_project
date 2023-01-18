@@ -65,6 +65,19 @@ services:
     tty: true
     stdin_open: true
     container_name: etl_datapipeline
+  
+  datastorage:
+    image: datastorage
+    depends_on:
+      - prometheus_data
+      - broker_kafka
+    volumes:
+      - "./DataStorage:/file"
+    command: ["/file/DataStorage.py"]
+    tty: true
+    stdin_open: true
+    container_name: datastorage
+
 volumes:
   db_data:
 
