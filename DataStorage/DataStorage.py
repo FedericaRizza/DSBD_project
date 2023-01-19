@@ -52,22 +52,39 @@ try:
         elif msg.error():
             print('error: {}'.format(msg.error()))
         else:
+            
             #record_key = msg.key()
             record_value = msg.value()
             data = json.loads(record_value) #ritorna un dictionary?
-            sql = """INSERT INTO datas ( 
+            print(data['metric_name'])
+            print("lunghezza", len(data['metric_name']))
+            sql = """INSERT INTO datas (
+                    metric_name,  
                     max_1h, max_3h, max_12h,
                     min_1h, min_3h, min_12h,
                     avg_1h, avg_3h, avg_12h,
                     devstd_1h, devstd_3h, devstd_12h,
                     max_predicted, min_predicted, avg_predicted,
                     autocorrelazione, stazionarieta, stagionalita)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE max_1h = %s, max_3h =  %s, max_12h = %s,
+                    min_1h = %s, min_3h = %s, min_12h = %s, 
+                    avg_1h = %s, avg_3h = %s, avg_12h = %s,
+                    devstd_1h = %s, devstd_3h = %s, devstd_12h = %s,
+                    max_predicted = %s, min_predicted = %s, avg_predicted = %s,
+                    autocorrelazione = %s, stazionarieta = %s, stagionalita = %s;"""
             #provare a cambiare inset in qualcosa che lo aggiorna, devo inserire la prima volta e poi per le stessa metrica 
-            val = (data['max_1h'], data['max_3h'], data['max_12h'], data['min_1h'], data['min_3h'], data['min_12h'], data['avg_1h'], data['avg_3h'],
-            data['avg_12h'], data['devstd_1h'], data['devstd_3h'], data['devstd_12h'], data['max_predicted'], data['min_predicted'], data['avg_predicted'], data['autocorrelazione'], data['stazionarieta'], data['stagionalita'])
+            val = (json.dumps(data['metric_name']),  data['max_1h'], data['max_3h'], data['max_12h'], data['min_1h'], data['min_3h'], data['min_12h'], data['avg_1h'], data['avg_3h'],
+            data['avg_12h'], data['devstd_1h'], data['devstd_3h'], data['devstd_12h'], data['max_predicted'], data['min_predicted'], data['avg_predicted'], data['autocorrelazione'], 
+            data['stazionarieta'], data['stagionalita'], 
+            data['max_1h'], data['max_3h'], data['max_12h'], data['min_1h'], data['min_3h'], data['min_12h'], data['avg_1h'], data['avg_3h'],
+            data['avg_12h'], data['devstd_1h'], data['devstd_3h'], data['devstd_12h'], data['max_predicted'], data['min_predicted'], data['avg_predicted'], data['autocorrelazione'], 
+            data['stazionarieta'], data['stagionalita'])
             #print(val)
-            cursor.execute(sql, val) #controllare se lancia eccezioni e controllare
+            try:
+                cursor.execute(sql, val) #controllare se lancia eccezioni e controllare
+            except Exception as sql_execute_err:
+                print("Errore: ", sql_execute_err)
             db.commit()
             print("Inserito!")
             #count = data['count']

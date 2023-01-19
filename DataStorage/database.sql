@@ -3,7 +3,9 @@ CREATE DATABASE IF NOT EXISTS prometheus_data;
 USE prometheus_data;
 
 CREATE TABLE IF NOT EXISTS datas (
-    ID_metrica int(11) NOT NULL AUTO_INCREMENT,
+    ID_metrica INT NOT NULL AUTO_INCREMENT,
+    metric_name VARCHAR(16000) NOT NULL,
+    slug VARCHAR(64) AS (SHA2 (metric_name, 256)) STORED NOT NULL,
     max_1h  float,
     max_3h  float,
     max_12h  float,
@@ -22,5 +24,6 @@ CREATE TABLE IF NOT EXISTS datas (
     autocorrelazione    float,
     stazionarieta   float,
     stagionalita    float,
-    PRIMARY KEY (ID_metrica)
+    PRIMARY KEY (ID_metrica),
+    UNIQUE (slug)
 );

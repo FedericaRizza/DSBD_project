@@ -31,99 +31,102 @@ except KafkaException as error:
 #print(producer)
 
 print("Connessione in corso...")
-prom = PrometheusConnect(url="http://15.160.61.227:29090", disable_ssl=True)
+#prom = PrometheusConnect(url="http://15.160.61.227:29090", disable_ssl=True)
+prom = PrometheusConnect(url="http://prom:9090", disable_ssl=True)
 print("Connessione avvenunata correttamente")
 
 
-label_config = {'job' : 'summary'} #{'nodeName': 'sv192'}
+label_config = {}#{'job' : 'summary'} #{'nodeName': 'sv192'}
 start_time = parse_datetime("2w") 
 end_time = parse_datetime("now")
 chunk_size = timedelta(days=1) #??discuterne con gli altri campione? oppure insieme di valori presi in un giorno? dagli appunti: Un chunks è una raccolta di campioni in un intervallo di tempo per una particolare serie.
 
 
-metric_set = ["cpuLoad", "cpuTemp", "diskUsage"]
+#metric_set = ["cpuLoad", "cpuTemp", "diskUsage"]
+metric_set = ["node_filesystem_files"]
+#metric = 0
+while True:
+    for metric in metric_set:
 
-metric = 0
-for metric in metric_set:
+        metric_data = prom.get_metric_range_data (
+            metric_name = metric,
+            label_config = label_config,
+            start_time = start_time,
+            end_time = end_time,
+            chunk_size = chunk_size,
+        )
 
-    metric_data = prom.get_metric_range_data (
-        metric_name = metric,
-        label_config = label_config,
-        start_time = start_time,
-        end_time = end_time,
-        chunk_size = chunk_size,
-    )
+        #metric_object_list = MetricsList(metric_data)
 
-metric_object_list = MetricsList(metric_data)
+        '''for item in metric_object_list:
+            print(item.metric_name, item.label_config, "\n")'''
 
-'''for item in metric_object_list:
-        print(item.metric_name, item.label_config, "\n")'''
+        '''metric_data = prom.get_metric_range_data (
+                metric_name = ["cpuLoad", "cpuTemp", "diskUsage"],
+                label_config = label_config,
+                start_time = start_time,
+                end_time = end_time,
+                chunk_size = chunk_size,
+        )'''
 
-'''metric_data = prom.get_metric_range_data (
-        metric_name = ["cpuLoad", "cpuTemp", "diskUsage"],
-        label_config = label_config,
-        start_time = start_time,
-        end_time = end_time,
-        chunk_size = chunk_size,
-)'''
-
-print("metriche ricevute!")
+        print("metriche ricevute!")
 
 #---------------PUNTO 2: calcoli il valore di max, min, avg, dev_std della metriche per 1h,3h, 12h --------------------
 
-while True:
-    for i in metric_data:
-        metric_rdf = MetricRangeDataFrame(i)
-        metric_rdf_1h = metric_rdf.last("1h")
-        min1 = metric_rdf_1h['value'].min()
-        max1 = metric_rdf_1h['value'].max()
-        avg1 = metric_rdf_1h['value'].mean()
-        dev_std1 = metric_rdf_1h['value'].std()
-        print('max1h:', max1,'min1h:', min1, 'media1h:',  avg1, 'deviazione standard1h:', dev_std1, "\n")
-        metric_rdf_3h = metric_rdf.last("3h")
-        min3 = metric_rdf_3h['value'].min()
-        max3 = metric_rdf_3h['value'].max()
-        avg3 = metric_rdf_3h['value'].mean()
-        dev_std3 = metric_rdf_3h['value'].std()
-        print('max3h:', max3,'min3h:', min3, 'media3h:',  avg3, 'deviazione standard3h:', dev_std3, "\n")
-        metric_rdf_12h = metric_rdf.last("12h")
-        min12 = metric_rdf_12h['value'].min()
-        max12 = metric_rdf_12h['value'].max()
-        avg12 = metric_rdf_12h['value'].mean()
-        dev_std12 = metric_rdf_12h['value'].std()
-        print('max12h:', max12,'min12h:', min12, 'media12h:',  avg12, 'deviazione standard12h:', dev_std12, "\n")
-        dati_dictionary = {
-            "metric_name" : metric_rdf['name'], 
-            "max_1h" : max1,
-            "max_3h" : max3,
-            "max_12h" : max12,
-            "min_1h" : min1,
-            "min_3h" : min3,
-            "min_12h" : min12,
-            "avg_1h" : avg1,
-            "avg_3h" : avg3,
-            "avg_12h" : avg12,
-            "devstd_1h" : dev_std1,
-            "devstd_3h" : dev_std3,
-            "devstd_12h" : dev_std12,
-            "max_predicted" : 40.0, #valore a caso per provare
-            "min_predicted" : 2.0, #valore a caso per provare
-            "avg_predicted" : 24.0, #valore a caso per provare
-            "autocorrelazione" : 11.1, #valore a caso per provare, avevo messo float nel db
-            "stazionarieta" : 10.0, #avevo messo float nel db, per il momento è una prova
-            "stagionalita" :    12.1 #//
-        }
-        
 
-        try:
-            producer.produce(topic, value = json.dumps(dati_dictionary) , callback = delivery_callback)
-        except BufferError:
-            print('%% coda piena! (%d messaggi in attesa): riprova\n' % len(producer))
-        except KafkaException as e:
-            print("Errore: ",e)
-        producer.poll(0) #timeout impostato su 0 quindi la poll ritorna immediatamente
+        for i in metric_data:
+            metric_rdf = MetricRangeDataFrame(i)
+            print(metric_rdf)
+            metric_rdf_1h = metric_rdf.last("1h")
+            min1 = metric_rdf_1h['value'].min()
+            max1 = metric_rdf_1h['value'].max()
+            avg1 = metric_rdf_1h['value'].mean()
+            dev_std1 = metric_rdf_1h['value'].std()
+            print('max1h:', max1,'min1h:', min1, 'media1h:',  avg1, 'deviazione standard1h:', dev_std1, "\n")
+            metric_rdf_3h = metric_rdf.last("3h")
+            min3 = metric_rdf_3h['value'].min()
+            max3 = metric_rdf_3h['value'].max()
+            avg3 = metric_rdf_3h['value'].mean()
+            dev_std3 = metric_rdf_3h['value'].std()
+            print('max3h:', max3,'min3h:', min3, 'media3h:',  avg3, 'deviazione standard3h:', dev_std3, "\n")
+            metric_rdf_12h = metric_rdf.last("12h")
+            min12 = metric_rdf_12h['value'].min()
+            max12 = metric_rdf_12h['value'].max()
+            avg12 = metric_rdf_12h['value'].mean()
+            dev_std12 = metric_rdf_12h['value'].std()
+            print('max12h:', max12,'min12h:', min12, 'media12h:',  avg12, 'deviazione standard12h:', dev_std12, "\n")
+            dati_dictionary = {
+                "metric_name" : i['metric'], 
+                "max_1h" : max1,
+                "max_3h" : max3,
+                "max_12h" : max12,
+                "min_1h" : min1,
+                "min_3h" : min3,
+                "min_12h" : min12,
+                "avg_1h" : avg1,
+                "avg_3h" : avg3,
+                "avg_12h" : avg12,
+                "devstd_1h" : dev_std1,
+                "devstd_3h" : dev_std3,
+                "devstd_12h" : dev_std12,
+                "max_predicted" : 40.0, #valore a caso per provare
+                "min_predicted" : 2.0, #valore a caso per provare
+                "avg_predicted" : 24.0, #valore a caso per provare
+                "autocorrelazione" : 11.1, #valore a caso per provare, avevo messo float nel db
+                "stazionarieta" : 10.0, #avevo messo float nel db, per il momento è una prova
+                "stagionalita" :    12.1 #//
+            }
+            
 
-    time.sleep(10)
+            try:
+                producer.produce(topic, value = json.dumps(dati_dictionary) , callback = delivery_callback)
+            except BufferError:
+                print('%% coda piena! (%d messaggi in attesa): riprova\n' % len(producer))
+            except KafkaException as e:
+                print("Errore: ",e)
+            producer.poll(0) #timeout impostato su 0 quindi la poll ritorna immediatamente
+
+        time.sleep(10)
 
 #%%---------------PUNTO 3: PREDIZIONE DI MAX, MIN, AVG NEI SUCCESSIVI 10MIN---------------------------------------------------------------------
 '''metric_object_list = MetricsList(metric_data)
