@@ -1,0 +1,3 @@
+pip3 install virtualenv ---> l'ho dovuto installare per creare l'ambiente virtuale //forse non c'è bisogno
+pip3 install flask
+pip3 install flask_mysqldb

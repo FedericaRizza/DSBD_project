@@ -25,6 +25,7 @@ while True:
     except Error as err:
         print(f"Error: '{err}'")'''
 
+#preparazione del consumer kafka
 consumer = Consumer({
     'bootstrap.servers': 'broker_kafka:9092',
     'group.id': 'DataStorage',
@@ -36,24 +37,19 @@ consumer = Consumer({
 # statements in 'Python' cursor.execute("SQLCODE")
 cursor = db.cursor()
 
+#iscrizione al topic
 consumer.subscribe(['prometheusdata'])
 
 #total_count = 0
 try:
     while True:
-        msg = consumer.poll(1.0) #timeout di un secondo?
-        if msg is None:
-                # No message available within timeout.
-                # Initial message consumption may take up to
-                # `session.timeout.ms` for the consumer group to
-                # rebalance and start consuming
+        msg = consumer.poll(1.0) #timeout di un secondo? #pool = none se non ci sono messaggi nel topic
+        if msg is None: 
             print("Waiting for message or event/error in poll()")
             continue
         elif msg.error():
             print('error: {}'.format(msg.error()))
         else:
-            
-            #record_key = msg.key()
             record_value = msg.value()
             data = json.loads(record_value) #ritorna un dictionary?
             print(data['metric_name'])
@@ -87,9 +83,8 @@ try:
                 print("Errore: ", sql_execute_err)
             db.commit()
             print("Inserito!")
-            #count = data['count']
-            #total_count += count
-            #print("Consumed record with key {} and value {}, and updated total count to {}".format(record_key, record_value, total_count))
+
+#per prendere il SIGINT -> guardare compose     
 except KeyboardInterrupt:
     pass
 finally:

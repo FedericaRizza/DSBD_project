@@ -43,7 +43,7 @@ chunk_size = timedelta(days=1) #??discuterne con gli altri campione? oppure insi
 
 
 #metric_set = ["cpuLoad", "cpuTemp", "diskUsage"]
-metric_set = ["node_filesystem_files"]
+metric_set = ["availableMem"]
 #metric = 0
 while True:
     for metric in metric_set:
