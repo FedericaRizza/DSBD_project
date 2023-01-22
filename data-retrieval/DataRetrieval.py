@@ -12,7 +12,7 @@ while True:
         host = "db",
         user = "user",
         password = "password",
-        database="prometheus_data"
+        database= "prometheus_data"
         )
         break
     except Exception as sqlerr:
@@ -21,13 +21,20 @@ while True:
 
 cursor = db.cursor()
 
+@app.route("/prova")
+def prova():
+   return "ciao2"
+
+
+
 
 @app.route("/metricavailable")
 def metriche_disponibili():
-    cursor.execute("SELECT metric_name FROM datas")
+    cursor.execute("SELECT ID_metrica, metric_name FROM datas")
     metrics_available  = cursor.fetchall()
+    print(metrics_available)
     db.commit() #credo non ci sia di bisogno 
-    return (json.dumps(metrics_available))
+    return json.dumps(metrics_available)
 
 @app.route("/metricavailable/<id_metric>/metadata")
 def metadata(id):
@@ -35,7 +42,7 @@ def metadata(id):
     val = (id)
     cursor.execute(sql,val)
     metadati = cursor.fetchall()
-    return (json.dumps(metadati))
+    return json.dumps(metadati)
 
 
 @app.route("/metrichedisponibili/<id_metrica>/values")
@@ -44,14 +51,14 @@ def valori():
     val = (id)
     cursor.execute(sql, val)
     values = cursor.fetchall()
-    return (json.dumps(values))
+    return json.dumps(values)
 
-@app.root("/metrichedisponibili/<id_metrica>/prediction_values")
+@app.route("/metrichedisponibili/<id_metrica>/prediction_values")
 def prediction():
     sql = ("SELECT max_predicted, min_predicted , avg_predicted FROM datas WHERE ID_metrica = %s")
     val = (id)
     cursor.execute(sql,val)
     prediction_values = cursor.fetchall()
-    return (json.dumps(prediction_values))
+    return json.dumps(prediction_values)
 
-cursor.close()
+cursor.close

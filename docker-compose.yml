@@ -80,6 +80,20 @@ services:
     stop_signal: SIGINT
     container_name: datastorage
 
+  dataretrieval:
+    image: dataretrieval
+    depends_on:
+      - prometheus_data
+    ports:
+      - 80:5000
+    #stop_signal: SIGINT
+    volumes:
+    - "./data-retrieval:/usr/src/app"
+    #command: ["/file/DataRetrieval.py"]
+    tty: true
+    stdin_open: true
+    container_name: dataretrieval
+
 volumes:
   db_data:
 

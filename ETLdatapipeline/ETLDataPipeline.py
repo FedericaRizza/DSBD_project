@@ -31,19 +31,19 @@ except KafkaException as error:
 #print(producer)
 
 print("Connessione in corso...")
-#prom = PrometheusConnect(url="http://15.160.61.227:29090", disable_ssl=True)
-prom = PrometheusConnect(url="http://prom:9090", disable_ssl=True)
+prom = PrometheusConnect(url="http://15.160.61.227:29090", disable_ssl=True)
+#prom = PrometheusConnect(url="http://prom:9090", disable_ssl=True)
 print("Connessione avvenunata correttamente")
 
 
-label_config = {}#{'job' : 'summary'} #{'nodeName': 'sv192'}
+label_config = {'job' : 'summary'} #{'nodeName': 'sv192'} #{}
 start_time = parse_datetime("2w") 
 end_time = parse_datetime("now")
 chunk_size = timedelta(days=1) #??discuterne con gli altri campione? oppure insieme di valori presi in un giorno? dagli appunti: Un chunks è una raccolta di campioni in un intervallo di tempo per una particolare serie.
 
 
-#metric_set = ["cpuLoad", "cpuTemp", "diskUsage"]
-metric_set = ["availableMem"]
+metric_set = ["cpuLoad", "cpuTemp", "diskUsage"]
+#metric_set = ["node"]
 #metric = 0
 while True:
     for metric in metric_set:
