@@ -27,3 +27,5 @@ CREATE TABLE IF NOT EXISTS datas (
     PRIMARY KEY (ID_metrica),
     UNIQUE (slug)
 );
+
+
