@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package sla;
+
+service SlaService {
+
+    rpc SetSla (MetricValue) returns (SlaReply) {}
+
+    rpc SlaStatus (SlaRequest) returns (SlaReply) {}
+
+    rpc GetViolation (SlaRequest) returns (stream Violation) {}
+
+    rpc GetFutureViolation (SlaRequest) returns (stream Violation) {}
+}
+
+message MetricValue {
+    string metric_name = 1;
+    int32 min = 2;
+    int32 max = 3;
+}
+
+message SlaRequest {
+    optional string name = 1;
+    optional int32 hour = 2;
+}
+
+message SlaReply {
+    string msg = 1;
+}
+
+message Violation {
+    string metric_name = 1;
+    float value = 2;
+    optional int32 num = 3;
+}
