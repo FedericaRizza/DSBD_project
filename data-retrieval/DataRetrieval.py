@@ -54,10 +54,10 @@ def invalid_route():
 #---QUERY DI TUTTE LE METRICHE DISPONIBILI IN PROMETHEUS-----------------------------------
 @app.route("/metrics_available")
 def metriche_disponibili():
-    try:
+    '''try:
         db.ping(reconnect=False, attempts = 1, delay=0)
     except:
-       return "Gateway Timeout! DB not available.", 504
+       return "Gateway Timeout! DB not available.", 504'''
     try:
         cursor.execute("SELECT ID_metrica, metric_name FROM datas")
         metrics_available  = cursor.fetchall()
@@ -66,6 +66,7 @@ def metriche_disponibili():
     #print(metrics_available)
     #db.commit() #credo non ci sia di bisogno 
     return json.dumps(metrics_available)
+
 
 
 

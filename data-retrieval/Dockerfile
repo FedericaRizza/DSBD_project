@@ -11,7 +11,7 @@ COPY DataRetrieval.py /usr/src/app/
 ENV FLASK_APP=DataRetrieval.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV FLASK_RUN_PORT=5000
-ENV FLASK_DEBUG=development
+ENV FLASK_ENV=development
 
 ENTRYPOINT ["flask", "run"]
 

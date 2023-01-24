@@ -8,6 +8,7 @@ import json
 import time
 import sys
 
+from statsmodels.tsa.stattools import adfuller
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -36,14 +37,14 @@ prom = PrometheusConnect(url="http://15.160.61.227:29090", disable_ssl=True)
 print("Connessione avvenunata correttamente")
 
 
-label_config = {'job' : 'summary'} #{'nodeName': 'sv192'} #{}
+label_config =  {'job' : 'summary'} # {} {'nodeName': 'sv192'} 
 start_time = parse_datetime("2w") 
 end_time = parse_datetime("now")
 chunk_size = timedelta(days=1) #??discuterne con gli altri campione? oppure insieme di valori presi in un giorno? dagli appunti: Un chunks è una raccolta di campioni in un intervallo di tempo per una particolare serie.
 
 
 metric_set = ["cpuLoad", "cpuTemp", "diskUsage"]
-#metric_set = ["node"]
+#metric_set = ["node_filesystem_files"]
 #metric = 0
 while True:
     for metric in metric_set:
@@ -71,12 +72,34 @@ while True:
 
         print("metriche ricevute!")
 
-#---------------PUNTO 2: calcoli il valore di max, min, avg, dev_std della metriche per 1h,3h, 12h --------------------
+                
 
+            
 
+        #per ogni metrica 
         for i in metric_data:
             metric_rdf = MetricRangeDataFrame(i)
             print(metric_rdf)
+            
+            #PUNTO 1:
+            #stazionarietà
+            metric_rdf = metric_rdf.dropna() #rimuove le righe che hanno valore NULL dal DataFrame
+            if metric_rdf['value'].min() != metric_rdf['value'].max(): #questo perchè una serie si dice stazionaria se non ha un trend
+                #st = {} 
+                #Un modo per verificare la stazionarietà di una serie temporale è quello di eseguire il cosidetto test di Dickey-Fuller.
+                #Nel primo parametro si mette la serie da testare, nel secondo per determinare la lunghezza (del ritardo?) tra i valori 0,1,...max, con AIC si cerca di minimizzzarlo?
+                adft = adfuller(metric_rdf['value'],autolag='AIC')
+                #Alla fine adfuller ci ritornerà un p-value, se quest'ultimo è più basso di un certo valore (come per esempio 0.05) si può concludere che la serie sia stazionaria
+                if adft[1] <= 0.05:
+                    #st['stationarity'] = True
+                    st = True
+            else:
+                #st = {}
+                #st["stationarity"] = False
+                st = False 
+
+            #PUNTO 2:
+            #max, min, avg, dev_std per 1h, 3h, 12h
             metric_rdf_1h = metric_rdf.last("1h")
             min1 = metric_rdf_1h['value'].min()
             max1 = metric_rdf_1h['value'].max()
@@ -95,6 +118,9 @@ while True:
             avg12 = metric_rdf_12h['value'].mean()
             dev_std12 = metric_rdf_12h['value'].std()
             print('max12h:', max12,'min12h:', min12, 'media12h:',  avg12, 'deviazione standard12h:', dev_std12, "\n")
+
+
+            #mando i dati con kafka
             dati_dictionary = {
                 "metric_name" : i['metric'], 
                 "max_1h" : max1,
@@ -113,7 +139,8 @@ while True:
                 "min_predicted" : 2.0, #valore a caso per provare
                 "avg_predicted" : 24.0, #valore a caso per provare
                 "autocorrelazione" : 11.1, #valore a caso per provare, avevo messo float nel db
-                "stazionarieta" : 10.0, #avevo messo float nel db, per il momento è una prova
+                #"stazionarieta" : 10.0, #avevo messo float nel db, per il momento è una prova
+                "stazionarieta": st,
                 "stagionalita" :    12.1 #//
             }
             

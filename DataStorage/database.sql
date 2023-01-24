@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS datas (
     min_predicted float DEFAULT NULL,
     avg_predicted   float DEFAULT NULL,
     autocorrelazione    float,
-    stazionarieta   float,
+    stazionarieta   BOOLEAN, 
     stagionalita    float,
     PRIMARY KEY (ID_metrica),
     UNIQUE (slug)
