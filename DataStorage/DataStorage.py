@@ -5,7 +5,7 @@ import time
 
 while True:
     try:
-        db = mysql.connector.connect(
+        db = mysql.connector.connect( #controllare se è giusto se dopo 20 min si scollega
         host = "db",
         user = "user",
         password = "password",
@@ -52,29 +52,31 @@ try:
         else:
             record_value = msg.value()
             data = json.loads(record_value) #ritorna un dictionary?
+            acf_data = data['autocorrelazione']
+            print (acf_data)
             print(data['metric_name'])
             print("lunghezza", len(data['metric_name']))
+
             sql = """INSERT INTO datas (
                     metric_name,  
                     max_1h, max_3h, max_12h,
                     min_1h, min_3h, min_12h,
                     avg_1h, avg_3h, avg_12h,
                     devstd_1h, devstd_3h, devstd_12h,
-                    max_predicted, min_predicted, avg_predicted,
-                    autocorrelazione, stazionarieta, stagionalita)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    max_predicted, min_predicted, avg_predicted, stazionarieta, stagionalita)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE max_1h = %s, max_3h =  %s, max_12h = %s,
                     min_1h = %s, min_3h = %s, min_12h = %s, 
                     avg_1h = %s, avg_3h = %s, avg_12h = %s,
                     devstd_1h = %s, devstd_3h = %s, devstd_12h = %s,
                     max_predicted = %s, min_predicted = %s, avg_predicted = %s,
-                    autocorrelazione = %s, stazionarieta = %s, stagionalita = %s;"""
+                    stazionarieta = %s, stagionalita = %s;"""
             #provare a cambiare inset in qualcosa che lo aggiorna, devo inserire la prima volta e poi per le stessa metrica 
             val = (json.dumps(data['metric_name']),  data['max_1h'], data['max_3h'], data['max_12h'], data['min_1h'], data['min_3h'], data['min_12h'], data['avg_1h'], data['avg_3h'],
-            data['avg_12h'], data['devstd_1h'], data['devstd_3h'], data['devstd_12h'], data['max_predicted'], data['min_predicted'], data['avg_predicted'], data['autocorrelazione'], 
+            data['avg_12h'], data['devstd_1h'], data['devstd_3h'], data['devstd_12h'], data['max_predicted'], data['min_predicted'], data['avg_predicted'], 
             data['stazionarieta'], data['stagionalita'], 
             data['max_1h'], data['max_3h'], data['max_12h'], data['min_1h'], data['min_3h'], data['min_12h'], data['avg_1h'], data['avg_3h'],
-            data['avg_12h'], data['devstd_1h'], data['devstd_3h'], data['devstd_12h'], data['max_predicted'], data['min_predicted'], data['avg_predicted'], data['autocorrelazione'], 
+            data['avg_12h'], data['devstd_1h'], data['devstd_3h'], data['devstd_12h'], data['max_predicted'], data['min_predicted'], data['avg_predicted'], 
             data['stazionarieta'], data['stagionalita'])
             #print(val)
             try:
@@ -82,7 +84,30 @@ try:
             except Exception as sql_execute_err:
                 print("Errore: ", sql_execute_err)
             db.commit()
-            print("Inserito!")
+            print("insert datas ok!")          
+
+            last_id = cursor.lastrowid
+
+            #print(last_id)
+
+            cursor.execute("DELETE FROM acf WHERE ID_metrica = %s", [cursor.lastrowid])
+            db.commit()
+
+            for item in acf_data:
+
+                sql1 = """INSERT INTO acf (ID_metrica, acf_lag, acf_value)
+                        VALUES (%s, %s, %s)"""
+                        #ON DUPLICATE KEY UPDATE acf_value = %s
+                val1 = (last_id, item, acf_data[item])
+                print(item)
+                print(last_id)
+                try:
+                    cursor.execute(sql1, val1) #controllare se lancia eccezioni e controllare
+                except Exception as sql_execute_err:
+                    print("Errore: ", sql_execute_err)
+                db.commit()
+                print("insert acf ok!") 
+                
 
 #per prendere il SIGINT -> guardare compose     
 except KeyboardInterrupt:

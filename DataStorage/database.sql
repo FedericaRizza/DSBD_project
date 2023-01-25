@@ -21,11 +21,18 @@ CREATE TABLE IF NOT EXISTS datas (
     max_predicted float DEFAULT NULL,
     min_predicted float DEFAULT NULL,
     avg_predicted   float DEFAULT NULL,
-    autocorrelazione    float,
     stazionarieta   BOOLEAN, 
     stagionalita    float,
     PRIMARY KEY (ID_metrica),
     UNIQUE (slug)
+);
+
+CREATE TABLE IF NOT EXISTS acf (
+    ID_metrica INT NOT NULL,
+    acf_lag INT,
+    acf_value float,
+    PRIMARY KEY(ID_metrica, acf_lag)
+    
 );
 
 CREATE TABLE IF NOT EXISTS sla (

@@ -54,6 +54,7 @@ def invalid_route():
 #---QUERY DI TUTTE LE METRICHE DISPONIBILI IN PROMETHEUS-----------------------------------
 @app.route("/metrics_available")
 def metriche_disponibili():
+    #TODO sistemare sto controllo 
     '''try:
         db.ping(reconnect=False, attempts = 1, delay=0)
     except:
@@ -79,7 +80,10 @@ def metadata(id_metrica):
     except:
        return "Gateway Timeout! DB not available.", 504
     try:
-        sql = ("SELECT autocorrelazione, stazionarieta, stagionalita FROM datas WHERE ID_metrica = %s")
+        sql = ("""SELECT acf.acf_value, datas.stazionarieta, datas.stagionalita 
+                FROM datas 
+                INNER JOIN acf ON datas.ID_metrica = acf.ID_metrica 
+                WHERE datas.ID_metrica = %s""")
         val = [id_metrica] #ci voglio le quadre oppure tonda e , 
         cursor.execute(sql, val)
         metadati = cursor.fetchall()
@@ -90,6 +94,8 @@ def metadata(id_metrica):
         #db.rollback()
         print(sql_execute_err)
         return "Errore!"
+    
+    #qui bisogna cambiare, servirà fare un join per prendere il valore di autocorrelazione
 
 
 #---QUERY DEI VALORI MAX, MIN, AVG, DEV_STD PER LE ULTIME 1,3,12 ORE-----------------------------------

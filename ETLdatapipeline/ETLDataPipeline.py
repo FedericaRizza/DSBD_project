@@ -8,7 +8,7 @@ import json
 import time
 import sys
 
-from statsmodels.tsa.stattools import adfuller
+from statsmodels.tsa.stattools import adfuller, acf
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -21,6 +21,7 @@ def delivery_callback(err, msg):
             sys.stderr.write('%% Message delivered to %s, partition[%d] @ %d\n' %
                              (msg.topic(), msg.partition(), msg.offset()))
 
+#configurazione per il punto 4
 configuration = {'bootstrap.servers': 'broker_kafka:9092'}
 topic = "prometheusdata" 
 
@@ -35,6 +36,8 @@ print("Connessione in corso...")
 prom = PrometheusConnect(url="http://15.160.61.227:29090", disable_ssl=True)
 #prom = PrometheusConnect(url="http://prom:9090", disable_ssl=True)
 print("Connessione avvenunata correttamente")
+
+
 
 
 label_config =  {'job' : 'summary'} # {} {'nodeName': 'sv192'} 
@@ -74,18 +77,19 @@ while True:
 
                 
 
-            
-
         #per ogni metrica 
         for i in metric_data:
-            metric_rdf = MetricRangeDataFrame(i)
-            print(metric_rdf)
             
+            metric_rdf = MetricRangeDataFrame(i)
+            #print(metric_rdf)
+            st = None
+            acf_result = {}
+
             #PUNTO 1:
             #stazionarietà
             metric_rdf = metric_rdf.dropna() #rimuove le righe che hanno valore NULL dal DataFrame
-            if metric_rdf['value'].min() != metric_rdf['value'].max(): #questo perchè una serie si dice stazionaria se non ha un trend
-                #st = {} 
+            if metric_rdf['value'].min() != metric_rdf['value'].max(): 
+                
                 #Un modo per verificare la stazionarietà di una serie temporale è quello di eseguire il cosidetto test di Dickey-Fuller.
                 #Nel primo parametro si mette la serie da testare, nel secondo per determinare la lunghezza (del ritardo?) tra i valori 0,1,...max, con AIC si cerca di minimizzzarlo?
                 adft = adfuller(metric_rdf['value'],autolag='AIC')
@@ -93,10 +97,28 @@ while True:
                 if adft[1] <= 0.05:
                     #st['stationarity'] = True
                     st = True
+                else:
+                    st = False
+
+                #autocorrelazione
+                #lags = len(metric_rdf['value']) #con lags forse si impostano i numeri di campioni 
+                #acf ci permette di calcolare la funzione di autocorrelazione
+                #nel primo parametro mettiamo la serie, con alpha invece viene impostata l'ampiezza dell'intervallo? la confidenza? alpha = confidenza ? e che è?
+                a,b = acf(metric_rdf['value'], alpha=.05)
+                for j in range(0,len(a)):
+                    #con questo controllo ritorno i valori esterni all'area che ci disegna la plotacf
+                    if a[j] <= b[j][0]-a[j] or a[j] >= b[j][1]-a[j]:
+                        acf_result[j] = a[j]
+                        #acf_result.append(a[j]) #append aggiunge un item alla fine della lista
+                print(acf_result)
+                    #perchè in alcuni salta il 30?
+                
+
             else:
                 #st = {}
                 #st["stationarity"] = False
                 st = False 
+
 
             #PUNTO 2:
             #max, min, avg, dev_std per 1h, 3h, 12h
@@ -119,8 +141,7 @@ while True:
             dev_std12 = metric_rdf_12h['value'].std()
             print('max12h:', max12,'min12h:', min12, 'media12h:',  avg12, 'deviazione standard12h:', dev_std12, "\n")
 
-
-            #mando i dati con kafka
+            #PUNTO 4: inoltrare in un topic kafka "prometheusdata" un messaggio contenenti i valori calcolati
             dati_dictionary = {
                 "metric_name" : i['metric'], 
                 "max_1h" : max1,
@@ -138,13 +159,14 @@ while True:
                 "max_predicted" : 40.0, #valore a caso per provare
                 "min_predicted" : 2.0, #valore a caso per provare
                 "avg_predicted" : 24.0, #valore a caso per provare
-                "autocorrelazione" : 11.1, #valore a caso per provare, avevo messo float nel db
+                #"autocorrelazione" : 11.1, #valore a caso per provare, avevo messo float nel db
+                "autocorrelazione" : acf_result, #gli passo un dizionario #valore a caso per provare, avevo messo float nel db
                 #"stazionarieta" : 10.0, #avevo messo float nel db, per il momento è una prova
                 "stazionarieta": st,
-                "stagionalita" :    12.1 #//
+                "stagionalita" : 12.1 #//
             }
             
-
+            
             try:
                 producer.produce(topic, value = json.dumps(dati_dictionary) , callback = delivery_callback)
             except BufferError:
