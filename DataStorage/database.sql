@@ -28,4 +28,9 @@ CREATE TABLE IF NOT EXISTS datas (
     UNIQUE (slug)
 );
 
-
+CREATE TABLE IF NOT EXISTS sla (
+        metric_name VARCHAR(255) NOT NULL, 
+        min INT, 
+        max INT, 
+        PRIMARY KEY (metric_name)
+);
