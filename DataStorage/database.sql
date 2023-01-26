@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS datas (
     min_predicted float DEFAULT NULL,
     avg_predicted   float DEFAULT NULL,
     stazionarieta   BOOLEAN, 
-    stagionalita    float,
+    stagionalita    INT,
     PRIMARY KEY (ID_metrica),
     UNIQUE (slug)
 );
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS acf (
     acf_lag INT,
     acf_value float,
     PRIMARY KEY(ID_metrica, acf_lag)
-    
+
 );
 
 CREATE TABLE IF NOT EXISTS sla (

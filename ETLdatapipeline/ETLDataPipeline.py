@@ -9,6 +9,8 @@ import time
 import sys
 
 from statsmodels.tsa.stattools import adfuller, acf
+from numpy.fft import rfft, rfftfreq
+import numpy as np
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -52,6 +54,8 @@ metric_set = ["cpuLoad", "cpuTemp", "diskUsage"]
 while True:
     for metric in metric_set:
 
+        #eventualmente fare un controllo in modo da non ripetere l'operazione dei metadati
+
         metric_data = prom.get_metric_range_data (
             metric_name = metric,
             label_config = label_config,
@@ -82,14 +86,16 @@ while True:
             
             metric_rdf = MetricRangeDataFrame(i)
             #print(metric_rdf)
-            st = None
-            acf_result = {}
+            st = None #boolean
+            acf_result = {} #dictionary
+            seasonality_period = 0 #integer
 
             #PUNTO 1:
-            #stazionarietà
             metric_rdf = metric_rdf.dropna() #rimuove le righe che hanno valore NULL dal DataFrame
             if metric_rdf['value'].min() != metric_rdf['value'].max(): 
                 
+
+                #stazionarietà
                 #Un modo per verificare la stazionarietà di una serie temporale è quello di eseguire il cosidetto test di Dickey-Fuller.
                 #Nel primo parametro si mette la serie da testare, nel secondo per determinare la lunghezza (del ritardo?) tra i valori 0,1,...max, con AIC si cerca di minimizzzarlo?
                 adft = adfuller(metric_rdf['value'],autolag='AIC')
@@ -97,8 +103,10 @@ while True:
                 if adft[1] <= 0.05:
                     #st['stationarity'] = True
                     st = True
+                    seasonality_period = 0
                 else:
                     st = False
+
 
                 #autocorrelazione
                 #lags = len(metric_rdf['value']) #con lags forse si impostano i numeri di campioni 
@@ -112,12 +120,29 @@ while True:
                         #acf_result.append(a[j]) #append aggiunge un item alla fine della lista
                 print(acf_result)
                     #perchè in alcuni salta il 30?
+
+
+                #stagionalità
+                if st == False:
+                    #mi faccio la trasformata di Fourier vedo tutte le componenti della frequenza e prendo quella con contributo maggiore
+                    #con rfft calcoliamo la trasformata discreta di fourier
+                    fft = abs(rfft(metric_rdf['value'])) #con abs torno il valore assoluto
+                    #con rfftfreq torniamo le frequenze di campionamento della trasmormaya di fourier, ritorna un array float 
+                    #gli passiamo la lunghezza della finestra
+                    fft_freq = rfftfreq(len(metric_rdf['value']))
+                    fft_freq2 = fft_freq[2:] #scarto i primi due valori (frequenza 0 e 1) dalla lista altrimenti il massimo sarebbe li sempre
+                    fft2 = fft[2:]
+                    freq_max = fft_freq2[np.argmax(fft2)] #argmax restituisce l'indice dei valori massimi
+                    seasonality_period = int(1/freq_max) #mi prendo il periodo come inverso della frequenza
+                    #ogni quanto la serie si ripete?
+
+                    #alla fine avrò un i valori della trasmormata nella y mentre nelle c avrò le frequenze, mi devo trovare la x dove la y è massima
                 
 
             else:
                 #st = {}
                 #st["stationarity"] = False
-                st = False 
+                st = True 
 
 
             #PUNTO 2:
@@ -128,12 +153,14 @@ while True:
             avg1 = metric_rdf_1h['value'].mean()
             dev_std1 = metric_rdf_1h['value'].std()
             print('max1h:', max1,'min1h:', min1, 'media1h:',  avg1, 'deviazione standard1h:', dev_std1, "\n")
+
             metric_rdf_3h = metric_rdf.last("3h")
             min3 = metric_rdf_3h['value'].min()
             max3 = metric_rdf_3h['value'].max()
             avg3 = metric_rdf_3h['value'].mean()
             dev_std3 = metric_rdf_3h['value'].std()
             print('max3h:', max3,'min3h:', min3, 'media3h:',  avg3, 'deviazione standard3h:', dev_std3, "\n")
+
             metric_rdf_12h = metric_rdf.last("12h")
             min12 = metric_rdf_12h['value'].min()
             max12 = metric_rdf_12h['value'].max()
@@ -163,7 +190,8 @@ while True:
                 "autocorrelazione" : acf_result, #gli passo un dizionario #valore a caso per provare, avevo messo float nel db
                 #"stazionarieta" : 10.0, #avevo messo float nel db, per il momento è una prova
                 "stazionarieta": st,
-                "stagionalita" : 12.1 #//
+                #"stagionalita" : 12.1 #//
+                "stagionalita": seasonality_period
             }
             
             

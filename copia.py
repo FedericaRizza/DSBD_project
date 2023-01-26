@@ -1,41 +1,34 @@
 from prometheus_api_client import PrometheusConnect, MetricsList, MetricSnapshotDataFrame, MetricRangeDataFrame
 from datetime import timedelta
 from prometheus_api_client.utils import parse_datetime
-import os
-import time
 from confluent_kafka import Producer, KafkaError, KafkaException
 import sys
 import json
+import os
+import time
 
 import grpc
 import sla_pb2_grpc
 import sla_pb2
 
 from numpy.fft import rfft, rfftfreq
-import math
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.tsa.stattools import adfuller, acf
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
-from statsmodels.tsa.arima.model import ARIMA,ARIMAResults
 from sklearn.metrics import mean_squared_error
-from pmdarima import auto_arima
-import pandas as pd
-
-
-# Ignore harmless warnings
-import warnings
-warnings.filterwarnings("ignore")
-
-
+#from pmdarima import auto_arima
+#from statsmodels.tsa.arima.model import ARIMA,ARIMAResults
+#import warnings
+#warnings.filterwarnings("ignore")
 
 from prometheus_client import Gauge
 
 g1h = Gauge('etl_executiontime_1h', 'ETL execution time for calculating 1h values', ["metric_name"])
 g3h = Gauge('etl_executiontime_3h', 'ETL execution time for calculating 3h values', ["metric_name"])
 g12h = Gauge('etl_executiontime_12h', 'ETL execution time for calculating 12h values', ["metric_name"])
-
 gMeta = Gauge('etl_executiontime_metadata', 'ETL execution time for calculating metadata', ["metric_name"])
 gPre = Gauge('etl_executiontime_prediction', 'ETL execution time for calculating prediction', ["metric_name"])
 
@@ -103,10 +96,9 @@ def everyHour():
             ris['name'] = metric_data_i['metric']
             df = MetricRangeDataFrame(metric_data_i)
             df = df.dropna()
-            # TODO calcolare i metadati (in un altro task con periodo maggiore)
 
             start = time.time()
-
+            # Se non è costante
             if df['value'].min() != df['value'].max():
                 # Stazionarietà
                 stationarity = {}
@@ -148,7 +140,7 @@ def everyHour():
 
                 result = seasonal_decompose(df['value'], model='add', period=indice)  # model='add' also works 
                 result.plot();
-                plt.savefig("/file/{}.png".format(10)) 
+                plt.savefig("/file/{}.png".format(add)) 
                 
                 err = {}
                 for i in range (int(period/2.1), min(int(period*2.1), math.floor(df['value'].size/2)), 1):
@@ -164,22 +156,22 @@ def everyHour():
 
                 result = seasonal_decompose(df['value'], model='mul', period=indice)  # model='add' also works 
                 result.plot();
-                plt.savefig("/file/{}.png".format(10)) 
+                plt.savefig("/file/{}.png".format(mul)) 
                 """
                 seasonality['add'] = {}
                 seasonality['add']['period'] = period
-                result = seasonal_decompose(df['value'], model='add', period=period)  # model='add' also works 
+                result = seasonal_decompose(df['value'], model='add', period=period)
                 seasonality['add']['error'] = result.resid.abs().max()
 
                 seasonality['mul'] = {}
                 seasonality['mul']['period'] = period
-                result = seasonal_decompose(df['value'], model='mul', period=period)  # model='add' also works 
+                result = seasonal_decompose(df['value'], model='mul', period=period)
                 seasonality['mul']['error'] = result.resid.subtract(1).abs().max()
 
             
             else:
                 stationarity = {}
-                stationarity['stationary'] = False
+                stationarity['stationary'] = True
                 stationarity['p_value'] = 0
                 acf_res = {}
                 seasonality = {}
@@ -324,36 +316,21 @@ def everyY():
                     metric_df_prediction = metric_df_prediction['value'].dropna()
                     metric_df_prediction = metric_df_prediction.resample(rule='T').mean()
                     # Dividiamo 90/10
-                    data_len = metric_df_prediction.size
-                    train = metric_df_prediction.iloc[:-int(data_len*0.1)]
-                    test = metric_df_prediction.iloc[-int(data_len*0.1):]
+                    #data_len = metric_df_prediction.size
+                    train = metric_df_prediction.iloc[:-10]#.iloc[:-int(data_len*0.1)]
+                    test = metric_df_prediction.iloc[-10:]#.iloc[-int(data_len*0.1):]
 
-                    # TODO Predico i prossimi 10 minuti (f_s = 1/1 min => 10 campioni)
+                    # TODO Controllare eccezioni Predico i prossimi 10 minuti (f_s = 1/1 min => 10 campioni)
                     prediction_rmse = {}
                     prediction_add = ""
-                    """
-                    if elem['seasonality']['add_period'] != 0:
-                        print("Ho il periodo add")
-                        tsmodel = ExponentialSmoothing(train, trend='add', seasonal='add',seasonal_periods=elem['seasonality']['add_period']).fit()
-                        prediction_add = tsmodel.forecast(test.size)
-                        prediction_rmse['es_add'] = {}
-                        prediction_rmse['es_add']['all_test'] = np.sqrt(mean_squared_error(test, prediction_add))
-                        prediction_rmse['es_add']['10m'] = np.sqrt(mean_squared_error(test[:10], prediction_add[:10]))
-                    else: 
-                        tsmodel = ExponentialSmoothing(train, trend='add', seasonal='add',seasonal_periods=1800).fit()
-                        prediction_add = tsmodel.forecast(test.size)
-                        prediction_rmse['es_add'] = {}
-                        print(prediction_add)
-                        prediction_rmse['es_add']['all_test'] = np.sqrt(mean_squared_error(test, prediction_add))
-                        prediction_rmse['es_add']['10m'] = np.sqrt(mean_squared_error(test[:10], prediction_add[:10]))
-                    """
                     # Se non è costante
                     if elem['seasonality']['add_period'] != 0:
                         print("Ho il periodo add")
-                        tsmodel = ExponentialSmoothing(metric_df_prediction, trend='add', seasonal='add',seasonal_periods=elem['seasonality']['add_period']).fit()
-                        prediction_add = tsmodel.forecast(10)
-                        # Non abbiamo modo di calcolare l'errore. Non ha senso calcolare quello additivo perché non avremmo come confrontarli
-
+                        tsmodel = ExponentialSmoothing(train, trend='add', seasonal='add',seasonal_periods=elem['seasonality']['add_period']).fit()
+                        prediction_add = tsmodel.forecast(20)
+                        prediction_rmse['es_add'] = {}
+                        #prediction_rmse['es_add']['all_test'] = np.sqrt(mean_squared_error(test, prediction_add))
+                        prediction_rmse['es_add']['10m'] = np.sqrt(mean_squared_error(test, prediction_add[:10]))
                     # Se è costante
                     else:
                         # Creiamo una previsione fittizia mantenendo l'ultimo valore
@@ -361,17 +338,28 @@ def everyY():
                         next_sample_time = last_sample_time + pd.DateOffset(minutes=1)
                         index = pd.date_range(start=next_sample_time, periods=10, freq='T')
                         prediction_add = pd.DataFrame(np.full(10, metric_df_prediction.tail(1)),index =index)
-                    """
+                        prediction_rmse['es_add'] = {}
+                        prediction_rmse['es_add']['10m'] = 0 #Supponiamo nullo l'errore
+                    
                     prediction_mul = ""
                     if elem['seasonality']['mul_period'] != 0:
                         print("Ho il periodo mul")
                         tsmodel = ExponentialSmoothing(train, trend='add', seasonal='mul',seasonal_periods=elem['seasonality']['mul_period']).fit()
-                        prediction_mul = tsmodel.forecast(test.size)
+                        prediction_mul = tsmodel.forecast(20)
                         prediction_rmse['es_mul'] = {}
-                        prediction_rmse['es_mul']['all_test'] = np.sqrt(mean_squared_error(test, prediction_mul))
-                        prediction_rmse['es_mul']['10m'] = np.sqrt(mean_squared_error(test[:10], prediction_mul[:10]))
-                    """
-                    # ARIMA
+                        prediction_rmse['es_mul']['10m'] = np.sqrt(mean_squared_error(test, prediction_mul[:10]))
+                    
+                    # Se è costante
+                    else:
+                        # Creiamo una previsione fittizia mantenendo l'ultimo valore
+                        last_sample_time = metric_df_prediction.index[-1]
+                        next_sample_time = last_sample_time + pd.DateOffset(minutes=1)
+                        index = pd.date_range(start=next_sample_time, periods=10, freq='T')
+                        prediction_mul = pd.DataFrame(np.full(10, metric_df_prediction.tail(1)),index =index)
+                        prediction_rmse['es_mul'] = {}
+                        prediction_rmse['es_mul']['10m'] = 0 #Supponiamo nullo l'errore
+
+                    # TODO ARIMA Abbiamo lasciato perdere, non riusciamo a farla funzionare
                     """"
                     arima_res = auto_arima(train)
                     model = ARIMA(train, order=arima_res.order).fit()
@@ -380,46 +368,33 @@ def everyY():
                     prediction_rmse['arima']['all_test'] = np.sqrt(mean_squared_error(test, prediction_arima))
                     prediction_rmse['arima']['10m'] = np.sqrt(mean_squared_error(test[:10], prediction_arima[:10]))
                     """
-                    """
-                    #define size
+
+                    print("rmse: ", prediction_rmse)
+                    print("prediction add: ", prediction_add)
+                    print("prediction mul: ", prediction_mul)
+                    prediction = prediction_add.iloc[10:] if prediction_rmse['es_add']['10m'] < prediction_rmse['es_mul']['10m'] else prediction_mul.iloc[10:]
+                    prediction_error = prediction_rmse['es_add']['10m'] if prediction_rmse['es_add']['10m'] < prediction_rmse['es_mul']['10m'] else prediction_rmse['es_mul']['10m']
+                    print("prediction: ", prediction)
+
                     plt.figure(figsize=(24,10))
-                    #add axes labels and a title
                     plt.ylabel('Values', fontsize=14)
                     plt.xlabel('Time', fontsize=14)
                     plt.title('Values over time', fontsize=16)
                     plt.plot(test,"-",label = 'real')
-                    if elem['seasonality']['add_period'] != 0:
-                        plt.plot(prediction_add,".",label = 'predAdd')
-                    if elem['seasonality']['mul_period'] != 0:
-                        plt.plot(prediction_mul,"*",label = 'predMul')
-                    plt.plot(prediction_arima,"*",label = 'predArima')
-                    #add legend
-                    plt.legend(title='Series')
-                    plt.savefig("file/{}.png".format(elem['name']['mountpoint'].replace("/", "_")))
-                    
-                    print("Errore predizione: ", prediction_rmse)
-                    """
-                    print("Prediction: ", prediction_add)
-                    plt.figure(figsize=(24,10))
-                    #add axes labels and a title
-                    plt.ylabel('Values', fontsize=14)
-                    plt.xlabel('Time', fontsize=14)
-                    plt.title('Values over time', fontsize=16)
-                    plt.plot(test.iloc[-100:],"-",label = 'real')
-                    #if elem['seasonality']['add_period'] != 0:
-                    plt.plot(prediction_add,".",label = 'predAdd')
-                    #if elem['seasonality']['mul_period'] != 0:
-                    #add legend
+                    plt.plot(prediction_add,"-",label = 'predAdd')
+                    plt.plot(prediction_mul,"-",label = 'predMul')
+                    #plt.plot(prediction_arima,"*",label = 'predArima')
                     plt.legend(title='Series')
                     plt.savefig("file/{}.png".format(elem['name']['mountpoint'].replace("/", "_")))
 
                          
                     # Verificare quando cambia il set se viene rimossa la predizione dalle metriche del set vecchio
                     ris['prediction'] = {}
-                    ris['prediction']['min'] = prediction_add.min()
-                    ris['prediction']['max'] = prediction_add.max()
-                    ris['prediction']['avg'] = prediction_add.mean()
-                    ris['prediction']['values'] = prediction_add.to_csv()
+                    ris['prediction']['min'] = prediction.min()
+                    ris['prediction']['max'] = prediction.max()
+                    ris['prediction']['avg'] = prediction.mean()
+                    ris['prediction']['values'] = prediction.to_csv()
+                    ris['prediction']['rmse'] = prediction_error
 
                     executionTime = time.time() - start
                     gPre.labels(ris['name']).set(executionTime)

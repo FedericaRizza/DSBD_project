@@ -11,6 +11,7 @@ def SetSla(name, min, max):
     with grpc.insecure_channel('localhost:50051') as channel:
         stub = sla_pb2_grpc.SlaServiceStub(channel)
         request=sla_pb2.MetricValue(metric_name=name,min=min,max=max)
+
         print(f'{request.metric_name} {request.min} {request.max}')
         i = input ('Confermare? y/n ')
         if i == 'n':
