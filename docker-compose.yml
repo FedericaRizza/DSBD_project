@@ -57,38 +57,38 @@ services:
     stdin_open: true
   
   etl_datapipeline:
-    image: etl_datapipeline #cambiare con build: ./ETLdatapipeline
+    build: ./ETLdatapipeline #cambiare con build: ./ETLdatapipeline
     depends_on:
       - broker_kafka
-    volumes: #togliere?
-      - "./ETLdatapipeline:/file"
-    command: ["/file/ETLDataPipeline.py"] #basta nel dockerfile?
+    #volumes: #togliere?
+    #  - "./ETLdatapipeline:/file"
+    #command: ["/file/ETLDataPipeline.py"] #basta nel dockerfile?
     tty: true
     stdin_open: true
     container_name: etl_datapipeline
   
   datastorage:
-    image: datastorage #cambiare con build: ./DataStorage
+    build: ./DataStorage #cambiare con build: ./DataStorage
     depends_on:
       - prometheus_data
       - broker_kafka
-    volumes: #togliere?
-      - "./DataStorage:/file"
-    command: ["/file/DataStorage.py"] #aggiungere COPY DataStorage.py . nel dockerfile?
+    #volumes: #togliere?
+    #  - "./DataStorage:/file"
+    #command: ["/file/DataStorage.py"] #aggiungere COPY DataStorage.py . nel dockerfile?
     tty: true
     stdin_open: true
     stop_signal: SIGINT
     container_name: datastorage
 
   dataretrieval:
-    image: dataretrieval #cambiare con build: ./data-retrieval
+    build: ./data-retrieval #cambiare con build: ./data-retrieval
     depends_on:
       - prometheus_data
     ports:
       - 80:5000
     #stop_signal: SIGINT
-    volumes: #togliere?
-    - "./data-retrieval:/usr/src/app"
+    #volumes: #togliere?
+    #- "./data-retrieval:/usr/src/app"
     #command: ["/file/DataRetrieval.py"]
     tty: true
     stdin_open: true

@@ -1,5 +1,5 @@
 FROM python:slim
-RUN python3 -m venv venv && . venv/bin/activate
+RUN python -m venv venv && . venv/bin/activate
 RUN pip install flask mysql-connector-python
 
 

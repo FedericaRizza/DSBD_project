@@ -5,5 +5,5 @@ WORKDIR /usr/src/app
 
 COPY server.py sla_pb2_grpc.py sla_pb2.py sla_pb2.pyi .
 
-ENTRYPOINT [ "python" ]
+ENTRYPOINT ["python"]
 CMD ["server.py"]

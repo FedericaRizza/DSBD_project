@@ -148,6 +148,7 @@ def dbconnect():
             break
         except Exception as sqlerr:
             print("Errore: ", sqlerr)
+            time.sleep(10)
     cursor = db.cursor()
     return db, cursor
 
