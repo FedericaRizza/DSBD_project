@@ -60,7 +60,8 @@ services:
     build: ./ETLdatapipeline #cambiare con build: ./ETLdatapipeline
     depends_on:
       - broker_kafka
-    #volumes: #togliere?
+    volumes: 
+      - ./ETLdatapipeline:/usr/src/app/
     #  - "./ETLdatapipeline:/file"
     #command: ["/file/ETLDataPipeline.py"] #basta nel dockerfile?
     tty: true

@@ -1,5 +1,5 @@
 from prometheus_api_client import PrometheusConnect, MetricsList, MetricSnapshotDataFrame, MetricRangeDataFrame
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from prometheus_api_client.utils import parse_datetime
 
@@ -14,6 +14,16 @@ import numpy as np
 
 import pandas as pd
 import matplotlib.pyplot as plt
+
+import logging
+from logging.handlers import RotatingFileHandler
+
+logger = logging.getLogger('my_logger')
+logger.setLevel(logging.INFO)
+handler = RotatingFileHandler('metric_log.log', mode="a", maxBytes=100*1024*1024, backupCount=2) #il file pesa al massimo 100mb, quelli più vecchi li scarta
+logger.addHandler(handler)
+
+
 #%matplotlib inline
 
 def delivery_callback(err, msg):
@@ -22,6 +32,8 @@ def delivery_callback(err, msg):
         else:
             sys.stderr.write('%% Message delivered to %s, partition[%d] @ %d\n' %
                              (msg.topic(), msg.partition(), msg.offset()))
+
+
 
 #configurazione per il punto 4
 configuration = {'bootstrap.servers': 'broker_kafka:9092'}
@@ -33,6 +45,8 @@ try:
 except KafkaException as error:
     print("Errore: ", error)
 #print(producer)
+
+
 
 print("Connessione in corso...")
 prom = PrometheusConnect(url="http://15.160.61.227:29090", disable_ssl=True)
@@ -51,8 +65,17 @@ chunk_size = timedelta(days=1) #??discuterne con gli altri campione? oppure insi
 metric_set = ["cpuLoad", "cpuTemp", "diskUsage"]
 #metric_set = ["node_filesystem_files"]
 #metric = 0
+
+'''
+#se il file non esiste open lo creerà per noi 
+log_file=open("log.txt","a") #apriamo il file log in modalità append in modo da scrivere in coda al contenuto attuale del file
+'''
+
+
 while True:
-    for metric in metric_set:
+    
+    
+    for metric in metric_set:  
 
         #eventualmente fare un controllo in modo da non ripetere l'operazione dei metadati
 
@@ -90,6 +113,7 @@ while True:
             acf_result = {} #dictionary
             seasonality_period = 0 #integer
 
+            stime = time.perf_counter()
             #PUNTO 1:
             metric_rdf = metric_rdf.dropna() #rimuove le righe che hanno valore NULL dal DataFrame
             if metric_rdf['value'].min() != metric_rdf['value'].max(): 
@@ -143,32 +167,61 @@ while True:
                 #st = {}
                 #st["stationarity"] = False
                 st = True 
-
+            
+            etime = time.perf_counter() #mi prendo il tempo esatto di quando ho finito queste operazioni
+            long_time = str(timedelta(seconds=etime-stime)) #timedelta per la manipolazione dei tempi
+            #log_file.write("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__'] + "\t" + str(i['metric']['nodeId'])) + "\tDurata calcolo metadati:" + long_time + "\n")
+            logger.info("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__'] + "\t" + "Nodo:" + str(i['metric']['nodeId'])) + "\t" + "\tDurata calcolo metadati:" + long_time + "\n")
 
             #PUNTO 2:
             #max, min, avg, dev_std per 1h, 3h, 12h
+
+            #perf counter utilizza il counter migliore disponibile
+            stime = time.perf_counter() #mi restituisce il valore (float) (in frazioni di secondi), include il tempo degli sleep, in questo modo setto il tempo di inizio
             metric_rdf_1h = metric_rdf.last("1h")
             min1 = metric_rdf_1h['value'].min()
             max1 = metric_rdf_1h['value'].max()
             avg1 = metric_rdf_1h['value'].mean()
             dev_std1 = metric_rdf_1h['value'].std()
             print('max1h:', max1,'min1h:', min1, 'media1h:',  avg1, 'deviazione standard1h:', dev_std1, "\n")
+            #monitoraggio con log per i valori calcoli per 1 ora
+            etime = time.perf_counter() #mi prendo il tempo esatto di quando ho finito queste operazioni
+            long_time = str(timedelta(seconds=etime-stime)) #timedelta per la manipolazione dei tempi
+            #log_file.write("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__'] + "\t" + str(i['metric']['nodeId'])) + "\tDurata calcolo max, min, avg, dev_std per 1h:" + long_time + "\n")
+            #non so se lasciare istance, in base a come decideremo di prendere le metriche alla fine
+            logger.info("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__']  + "\tNodo:" + str(i['metric']['nodeId'])) + "\t" + "\tDurata calcolo max, min, avg, dev_std per 1h:" + long_time + "\n")
 
+
+            stime = time.perf_counter()
             metric_rdf_3h = metric_rdf.last("3h")
             min3 = metric_rdf_3h['value'].min()
             max3 = metric_rdf_3h['value'].max()
             avg3 = metric_rdf_3h['value'].mean()
             dev_std3 = metric_rdf_3h['value'].std()
             print('max3h:', max3,'min3h:', min3, 'media3h:',  avg3, 'deviazione standard3h:', dev_std3, "\n")
+            etime = time.perf_counter() #mi prendo il tempo esatto di quando ho finito queste operazioni
+            long_time = str(timedelta(seconds=etime-stime)) #timedelta per la manipolazione dei tempi
+            #log_file.write("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__'] + "\t" + str(i['metric']['nodeId'])) + "\tDurata calcolo max, min, avg, dev_std per 3h:" + long_time + "\n")
+            logger.info("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__'] + "\t" + "Nodo:" + str(i['metric']['nodeId'])) + "\t" + "\tDurata calcolo max, min, avg, dev_std per 3h:" + long_time + "\n")
 
+
+            stime = time.perf_counter()
             metric_rdf_12h = metric_rdf.last("12h")
             min12 = metric_rdf_12h['value'].min()
             max12 = metric_rdf_12h['value'].max()
             avg12 = metric_rdf_12h['value'].mean()
             dev_std12 = metric_rdf_12h['value'].std()
             print('max12h:', max12,'min12h:', min12, 'media12h:',  avg12, 'deviazione standard12h:', dev_std12, "\n")
+            etime = time.perf_counter() #mi prendo il tempo esatto di quando ho finito queste operazioni
+            long_time = str(timedelta(seconds=etime-stime)) #timedelta per la manipolazione dei tempi
+            #log_file.write("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__'] + "\t" + str(i['metric']['nodeId'])) + "\tDurata calcolo max, min, avg, dev_std per 12h:" + long_time + "\n")
+            logger.info("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__'] + "\t" + "Nodo:" + str(i['metric']['nodeId'])) + "\t" + "\tDurata calcolo max, min, avg, dev_std per 12h:" + long_time + "\n")
+
+            
+
 
             #PUNTO 4: inoltrare in un topic kafka "prometheusdata" un messaggio contenenti i valori calcolati
+
             dati_dictionary = {
                 "metric_name" : i['metric'], 
                 "max_1h" : max1,
@@ -204,6 +257,9 @@ while True:
             producer.poll(0) #timeout impostato su 0 quindi la poll ritorna immediatamente
 
         time.sleep(10)
+
+
+
 
 #%%---------------PUNTO 3: PREDIZIONE DI MAX, MIN, AVG NEI SUCCESSIVI 10MIN---------------------------------------------------------------------
 '''metric_object_list = MetricsList(metric_data)
