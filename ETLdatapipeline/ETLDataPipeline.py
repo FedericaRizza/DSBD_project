@@ -172,19 +172,27 @@ while True:
                 else:
                     st = False
 
-
+                #TODO cambiare questa autocorrelazione
                 #autocorrelazione
                 #lags = len(metric_rdf['value']) #con lags forse si impostano i numeri di campioni 
                 #acf ci permette di calcolare la funzione di autocorrelazione
                 #nel primo parametro mettiamo la serie, con alpha invece viene impostata l'ampiezza dell'intervallo? la confidenza? alpha = confidenza ? e che è?
-                a,b = acf(metric_rdf['value'], alpha=.05)
+                '''a,b = acf(metric_rdf['value'], alpha = .05)
                 for j in range(0,len(a)):
                     #con questo controllo ritorno i valori esterni all'area che ci disegna la plotacf
                     if a[j] <= b[j][0]-a[j] or a[j] >= b[j][1]-a[j]:
                         acf_result[j] = a[j]
                         #acf_result.append(a[j]) #append aggiunge un item alla fine della lista
                 print(acf_result)
-                    #perchè in alcuni salta il 30?
+                    #perchè in alcuni salta il 30?'''
+                
+                
+                a = acf (metric_rdf['value'])
+                for j in range (0,len(a)):
+                    if abs(a[j]) > 0.25: #consideriamo solo campioni che sono correlati più del 25%
+                        acf_result[j] = a[j]
+
+                
 
 
                 #stagionalità
@@ -361,7 +369,7 @@ while True:
                 etime = time.perf_counter() #mi prendo il tempo esatto di quando ho finito queste operazioni
                 long_time = str(timedelta(seconds=etime-stime)) #timedelta per la manipolazione dei tempi
                 #log_file.write("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__'] + "\t" + str(i['metric']['nodeId'])) + "\tDurata calcolo max, min, avg, dev_std per 12h:" + long_time + "\n")
-                logger.info("\nTimestamp:" + str(datetime.now()) + "\tMetrica: " + str(i['metric']['__name__'] + "\t" + "Nodo: " + str(i['metric']['nodeId'])) + "\t" + "\tDurata forecasting e calcolo max, min, avg previsti nei prossimi 10min: " + long_time + "\n")
+                logger.info("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__'] + "\t" + "Nodo:" + str(i['metric']['nodeId'])) + "\t" + "\tDurata forecasting e calcolo max, min, avg previsti nei prossimi 10min:" + long_time + "\n")
             
 
 

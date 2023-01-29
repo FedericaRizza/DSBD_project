@@ -24577,3 +24577,264 @@ Timestamp:2023-01-29 01:15:34.573937	Metrica:diskUsage	Nodo:267		Durata calcolo 
 
 Timestamp:2023-01-29 01:15:34.575660	Metrica:diskUsage	Nodo:267		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.000924
 
+
+Timestamp: 2023-01-29 17:50:51.973282	Metrica: cpuLoad			Durata Prometheus query di 1w di dati: 0:00:02.105112
+
+
+Timestamp:2023-01-29 17:50:58.857750	Metrica:cpuLoad	Nodo:105		Durata calcolo metadati:0:00:06.159144
+
+
+Timestamp:2023-01-29 17:50:58.878918	Metrica:cpuLoad	Nodo:105		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.009926
+
+
+Timestamp:2023-01-29 17:50:58.909589	Metrica:cpuLoad	Nodo:105		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.002356
+
+
+Timestamp:2023-01-29 17:50:58.923171	Metrica:cpuLoad	Nodo:105		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.001375
+
+
+Timestamp:2023-01-29 17:51:03.708318	Metrica:cpuLoad	Nodo:106		Durata calcolo metadati:0:00:04.587575
+
+
+Timestamp:2023-01-29 17:51:03.862372	Metrica:cpuLoad	Nodo:106		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.076684
+
+
+Timestamp:2023-01-29 17:51:03.897211	Metrica:cpuLoad	Nodo:106		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.011489
+
+
+Timestamp:2023-01-29 17:51:03.972217	Metrica:cpuLoad	Nodo:106		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.027759
+
+
+Timestamp:2023-01-29 17:51:11.595994	Metrica:cpuLoad	Nodo:107		Durata calcolo metadati:0:00:07.029329
+
+
+Timestamp:2023-01-29 17:51:11.612755	Metrica:cpuLoad	Nodo:107		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.008997
+
+
+Timestamp:2023-01-29 17:51:11.631696	Metrica:cpuLoad	Nodo:107		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.005677
+
+
+Timestamp:2023-01-29 17:51:11.647489	Metrica:cpuLoad	Nodo:107		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.002242
+
+
+Timestamp:2023-01-29 17:51:13.073297	Metrica:cpuLoad	Nodo:108		Durata calcolo metadati:0:00:01.296544
+
+
+Timestamp:2023-01-29 17:51:13.144898	Metrica:cpuLoad	Nodo:108		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.041194
+
+
+Timestamp:2023-01-29 17:51:13.169826	Metrica:cpuLoad	Nodo:108		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.005103
+
+
+Timestamp:2023-01-29 17:51:13.185640	Metrica:cpuLoad	Nodo:108		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.004562
+
+
+Timestamp:2023-01-29 17:51:14.645650	Metrica:cpuLoad	Nodo:111		Durata calcolo metadati:0:00:00.830701
+
+
+Timestamp:2023-01-29 17:51:14.654410	Metrica:cpuLoad	Nodo:111		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.003982
+
+
+Timestamp:2023-01-29 17:51:14.659388	Metrica:cpuLoad	Nodo:111		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.001455
+
+
+Timestamp:2023-01-29 17:51:14.670171	Metrica:cpuLoad	Nodo:111		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.001573
+
+
+Timestamp:2023-01-29 17:51:15.814416	Metrica:cpuLoad	Nodo:112		Durata calcolo metadati:0:00:01.053898
+
+
+Timestamp:2023-01-29 17:51:15.820747	Metrica:cpuLoad	Nodo:112		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.001551
+
+
+Timestamp:2023-01-29 17:51:15.830943	Metrica:cpuLoad	Nodo:112		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.004512
+
+
+Timestamp:2023-01-29 17:51:15.838261	Metrica:cpuLoad	Nodo:112		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.002334
+
+
+Timestamp:2023-01-29 17:51:16.963816	Metrica:cpuLoad	Nodo:267		Durata calcolo metadati:0:00:01.024899
+
+
+Timestamp:2023-01-29 17:51:16.976085	Metrica:cpuLoad	Nodo:267		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.006083
+
+
+Timestamp:2023-01-29 17:51:16.983851	Metrica:cpuLoad	Nodo:267		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.003959
+
+
+Timestamp:2023-01-29 17:51:16.989500	Metrica:cpuLoad	Nodo:267		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.001087
+
+
+Timestamp: 2023-01-29 17:51:17.456046	Metrica: cpuTemp			Durata Prometheus query di 1w di dati: 0:00:00.459327
+
+
+Timestamp:2023-01-29 17:51:21.129673	Metrica:cpuTemp	Nodo:105		Durata calcolo metadati:0:00:03.604848
+
+
+Timestamp:2023-01-29 17:51:21.146372	Metrica:cpuTemp	Nodo:105		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.003562
+
+
+Timestamp:2023-01-29 17:51:21.168491	Metrica:cpuTemp	Nodo:105		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.016393
+
+
+Timestamp:2023-01-29 17:51:21.191384	Metrica:cpuTemp	Nodo:105		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.007541
+
+
+Timestamp:2023-01-29 17:51:24.819417	Metrica:cpuTemp	Nodo:106		Durata calcolo metadati:0:00:03.180105
+
+
+Timestamp:2023-01-29 17:51:24.841418	Metrica:cpuTemp	Nodo:106		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.015369
+
+
+Timestamp:2023-01-29 17:51:24.849623	Metrica:cpuTemp	Nodo:106		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.001630
+
+
+Timestamp:2023-01-29 17:51:24.870032	Metrica:cpuTemp	Nodo:106		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.010069
+
+
+Timestamp:2023-01-29 17:51:26.985622	Metrica:cpuTemp	Nodo:107		Durata calcolo metadati:0:00:01.977920
+
+
+Timestamp:2023-01-29 17:51:26.994813	Metrica:cpuTemp	Nodo:107		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.004667
+
+
+Timestamp:2023-01-29 17:51:27.002535	Metrica:cpuTemp	Nodo:107		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.004985
+
+
+Timestamp:2023-01-29 17:51:27.014045	Metrica:cpuTemp	Nodo:107		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.004847
+
+
+Timestamp:2023-01-29 17:51:30.189972	Metrica:cpuTemp	Nodo:108		Durata calcolo metadati:0:00:02.831620
+
+
+Timestamp:2023-01-29 17:51:30.373328	Metrica:cpuTemp	Nodo:108		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.133686
+
+
+Timestamp:2023-01-29 17:51:30.490186	Metrica:cpuTemp	Nodo:108		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.002605
+
+
+Timestamp:2023-01-29 17:51:30.505589	Metrica:cpuTemp	Nodo:108		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.004433
+
+
+Timestamp:2023-01-29 17:51:38.854846	Metrica:cpuTemp	Nodo:111		Durata calcolo metadati:0:00:08.145430
+
+
+Timestamp:2023-01-29 17:51:39.032759	Metrica:cpuTemp	Nodo:111		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.044792
+
+
+Timestamp:2023-01-29 17:51:39.066217	Metrica:cpuTemp	Nodo:111		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.014060
+
+
+Timestamp:2023-01-29 17:51:39.103186	Metrica:cpuTemp	Nodo:111		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.017813
+
+
+Timestamp:2023-01-29 17:51:43.529746	Metrica:cpuTemp	Nodo:112		Durata calcolo metadati:0:00:04.041729
+
+
+Timestamp:2023-01-29 17:51:43.547673	Metrica:cpuTemp	Nodo:112		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.005101
+
+
+Timestamp:2023-01-29 17:51:43.555694	Metrica:cpuTemp	Nodo:112		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.003035
+
+
+Timestamp:2023-01-29 17:51:43.571269	Metrica:cpuTemp	Nodo:112		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.003666
+
+
+Timestamp:2023-01-29 17:51:46.627753	Metrica:cpuTemp	Nodo:267		Durata calcolo metadati:0:00:02.830229
+
+
+Timestamp:2023-01-29 17:51:46.638758	Metrica:cpuTemp	Nodo:267		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.003183
+
+
+Timestamp:2023-01-29 17:51:46.648923	Metrica:cpuTemp	Nodo:267		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.004803
+
+
+Timestamp:2023-01-29 17:51:46.670494	Metrica:cpuTemp	Nodo:267		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.015156
+
+
+Timestamp: 2023-01-29 17:51:47.338367	Metrica: diskUsage			Durata Prometheus query di 1w di dati: 0:00:00.657123
+
+
+Timestamp:2023-01-29 17:51:49.526560	Metrica:diskUsage	Nodo:105		Durata calcolo metadati:0:00:02.084344
+
+
+Timestamp:2023-01-29 17:51:50.263440	Metrica:diskUsage	Nodo:105		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.007390
+
+
+Timestamp:2023-01-29 17:51:50.286771	Metrica:diskUsage	Nodo:105		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.014117
+
+
+Timestamp:2023-01-29 17:51:50.306608	Metrica:diskUsage	Nodo:105		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.014032
+
+
+Timestamp:2023-01-29 17:51:51.823903	Metrica:diskUsage	Nodo:106		Durata calcolo metadati:0:00:01.063809
+
+
+Timestamp:2023-01-29 17:51:51.879331	Metrica:diskUsage	Nodo:106		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.001470
+
+
+Timestamp:2023-01-29 17:51:51.887478	Metrica:diskUsage	Nodo:106		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.003693
+
+
+Timestamp:2023-01-29 17:51:51.894200	Metrica:diskUsage	Nodo:106		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.000966
+
+
+Timestamp:2023-01-29 17:51:53.129324	Metrica:diskUsage	Nodo:107		Durata calcolo metadati:0:00:01.136996
+
+
+Timestamp:2023-01-29 17:51:53.142030	Metrica:diskUsage	Nodo:107		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.008614
+
+
+Timestamp:2023-01-29 17:51:53.149447	Metrica:diskUsage	Nodo:107		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.001443
+
+
+Timestamp:2023-01-29 17:51:53.156663	Metrica:diskUsage	Nodo:107		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.002657
+
+
+Timestamp:2023-01-29 17:51:56.074687	Metrica:diskUsage	Nodo:108		Durata calcolo metadati:0:00:02.779273
+
+
+Timestamp:2023-01-29 17:51:56.200549	Metrica:diskUsage	Nodo:108		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.055986
+
+
+Timestamp:2023-01-29 17:51:56.244732	Metrica:diskUsage	Nodo:108		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.008599
+
+
+Timestamp:2023-01-29 17:51:56.271696	Metrica:diskUsage	Nodo:108		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.002304
+
+
+Timestamp:2023-01-29 17:51:59.009673	Metrica:diskUsage	Nodo:111		Durata calcolo metadati:0:00:02.324380
+
+
+Timestamp:2023-01-29 17:51:59.029393	Metrica:diskUsage	Nodo:111		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.010058
+
+
+Timestamp:2023-01-29 17:51:59.044616	Metrica:diskUsage	Nodo:111		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.011365
+
+
+Timestamp:2023-01-29 17:51:59.066953	Metrica:diskUsage	Nodo:111		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.008596
+
+
+Timestamp:2023-01-29 17:52:01.802557	Metrica:diskUsage	Nodo:112		Durata calcolo metadati:0:00:02.452917
+
+
+Timestamp:2023-01-29 17:52:01.820406	Metrica:diskUsage	Nodo:112		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.010511
+
+
+Timestamp:2023-01-29 17:52:01.838725	Metrica:diskUsage	Nodo:112		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.010932
+
+
+Timestamp:2023-01-29 17:52:01.854533	Metrica:diskUsage	Nodo:112		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.009916
+
+
+Timestamp:2023-01-29 17:52:04.260740	Metrica:diskUsage	Nodo:267		Durata calcolo metadati:0:00:02.247131
+
+
+Timestamp:2023-01-29 17:52:04.274539	Metrica:diskUsage	Nodo:267		Durata calcolo max, min, avg, dev_std per 1h:0:00:00.005102
+
+
+Timestamp:2023-01-29 17:52:04.282945	Metrica:diskUsage	Nodo:267		Durata calcolo max, min, avg, dev_std per 3h:0:00:00.004014
+
+
+Timestamp:2023-01-29 17:52:04.294109	Metrica:diskUsage	Nodo:267		Durata calcolo max, min, avg, dev_std per 12h:0:00:00.007440
+
