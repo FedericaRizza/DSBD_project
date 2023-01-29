@@ -12,7 +12,7 @@ class SlaService(sla_pb2_grpc.SlaServiceServicer):
 
     def SetSla(self, request, context):
         sql= "SELECT metric_name FROM datas WHERE metric_name LIKE %s LIMIT 1"
-        val=['%'+request.metric_name+'%']
+        val=['%"'+request.metric_name+'"%']
         print(f'{request.metric_name} {request.min} {request.max}')
         try:
             db.ping()
@@ -23,9 +23,25 @@ class SlaService(sla_pb2_grpc.SlaServiceServicer):
             return sla_pb2.SlaReply(msg=f'Errore: {sql_execute_err}, {type(sql_execute_err)}')
         if result == None:
             return sla_pb2.SlaReply(msg=f'Non ci sono metriche disponibili chiamate {request.metric_name}')
+            
+        try:
+            cursor.execute("SELECT metric_name FROM sla")
+            slalist= cursor.fetchall()
+        except Exception as sql_execute_err:
+            print("Errore: ", sql_execute_err)
+            return sla_pb2.SlaReply(msg=f'Errore: {sql_execute_err}, {type(sql_execute_err)}')
 
-        sql = "INSERT INTO sla (metric_name, min, max) VALUES (%s,%s,%s) ON DUPLICATE KEY UPDATE min = %s, max = %s;"
-        val= (request.metric_name, request.min, request.max, request.min, request.max)
+        if len(slalist) >=5:
+            if (request.metric_name,) in slalist:
+                sql = "UPDATE sla SET min = %s, max = %s WHERE metric_name = %s"
+                val = (request.min, request.max, request.metric_name)
+            else:
+                cursor.execute("DELETE FROM sla")
+                sql = "INSERT INTO sla (metric_name, min, max) VALUES (%s,%s,%s)"
+                val = (request.metric_name, request.min, request.max)                
+        else:
+            sql = "INSERT INTO sla (metric_name, min, max) VALUES (%s,%s,%s) ON DUPLICATE KEY UPDATE min = %s, max = %s;"
+            val= (request.metric_name, request.min, request.max, request.min, request.max)
         try:
             db.ping()
             cursor.execute(sql, val)

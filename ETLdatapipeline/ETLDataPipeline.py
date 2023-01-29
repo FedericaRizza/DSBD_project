@@ -80,6 +80,11 @@ while True:
         print("Errore: ", sql_err)
         time.sleep(5)
 cursor=db.cursor()
+#
+'''cursor.execute("DELETE FROM datas")
+cursor.execute("DELETE FROM acf")
+db.commit()
+print("fatto")'''
 
 
 label_config =  {'job' : 'summary'} # {} {'nodeName': 'sv192'} 
@@ -120,7 +125,7 @@ while True:
         etime = time.perf_counter() #mi prendo il tempo esatto di quando ho finito queste operazioni
         long_time = str(timedelta(seconds=etime-stime)) #timedelta per la manipolazione dei tempi
         #log_file.write("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__'] + "\t" + str(i['metric']['nodeId'])) + "\tDurata calcolo metadati:" + long_time + "\n")
-        logger.info("\nTimestamp: " + str(datetime.now()) + "\tMetrica: " + metric  + "\t" + "\tDurata Prometheus query di 1w di dati: " + long_time + "\n")
+        logger.info("\nTimestamp: " + str(datetime.now()) + "\tMetrica: " + metric  + "\t\t" + "\tDurata Prometheus query di 1w di dati: " + long_time + "\n")
 
         #metric_object_list = MetricsList(metric_data)
 
@@ -159,6 +164,7 @@ while True:
                 #Un modo per verificare la stazionarietà di una serie temporale è quello di eseguire il cosidetto test di Dickey-Fuller.
                 #Nel primo parametro si mette la serie da testare, nel secondo per determinare la lunghezza (del ritardo?) tra i valori 0,1,...max, con AIC si cerca di minimizzzarlo?
                 adft = adfuller(metric_rdf['value'],autolag='AIC')
+                print("ADFTEST",adft[1])
                 #Alla fine adfuller ci ritornerà un p-value, se quest'ultimo è più basso di un certo valore (come per esempio 0.05) si può concludere che la serie sia stazionaria
                 if adft[1] <= 0.01: #cambiato da 0.05 a .01, mi dava stazionaria una serie palesemente con stagionalità
                     #st['stationarity'] = True
@@ -194,9 +200,10 @@ while True:
                     freq_max = fft_freq2[np.argmax(fft2)] #argmax restituisce l'indice dei valori massimi
                     seasonality_period = int(1/freq_max) #mi prendo il periodo come inverso della frequenza
                     #ogni quanto la serie si ripete?
-
+                    print("PERIODO", seasonality_period)
                     #alla fine avrò un i valori della trasmormata nella y mentre nelle c avrò le frequenze, mi devo trovare la x dove la y è massima
-             
+                    if seasonality_period > 1440:
+                        seasonality_period = 0
 
             else:
                 st = True 
@@ -253,12 +260,17 @@ while True:
 #---------------------PREDIZIONE: richiede dati di tutta la serie per fare train e test
             cursor.execute("SELECT metric_name FROM sla")
             name_list=cursor.fetchall()
-            
-            if i['metric']['__name__'] in name_list: #se non ho settato sla set non entra nell if, nessun valore di predizione
-                
+            max_pred=None
+            min_pred=None
+            avg_pred=None
+            print("-----------------------------")
+            print(name_list, i['metric']['__name__'])
+            if (i['metric']['__name__'],) in name_list: #se non ho settato sla set non entra nell if, nessun valore di predizione, name_list è lista di tuple
+                stime = time.perf_counter()
+                print("IF DI PREDIZIONE", i['metric'])
                 metric_data_pred = prom.get_metric_range_data (
                 metric_name = i['metric']['__name__'],
-                label_config = i['metric]'],
+                label_config = dict(list(i['metric'].items())[1:]), #tolgo il primo elemento del dizionario per non mettere di nuovo il nome metrica
                 start_time = parse_datetime("1w"),
                 end_time = parse_datetime("now") ,
                 #chunk_size = chunk_size,
@@ -272,9 +284,8 @@ while True:
                 test_data = tsr.iloc[-10:]
 
                 #se stazionaria
-                if st:
-
-                    stime = time.perf_counter()
+                if st or seasonality_period == 0:
+                    print("STAZIONARIO")
 
                     pred_model_1 = SimpleExpSmoothing(train_data,initialization_method="heuristic").fit(smoothing_level=0.2,optimized=False)
                     pred_model_2 = SimpleExpSmoothing(train_data,initialization_method="heuristic").fit(smoothing_level=0.6,optimized=False)
@@ -298,13 +309,7 @@ while True:
                     prediction = pred_model.forecast(10)
                     max_pred = prediction.max()
                     min_pred = prediction.min()
-                    avg_pred = prediction.mean()  
-
-                    etime = time.perf_counter() #mi prendo il tempo esatto di quando ho finito queste operazioni
-                    long_time = str(timedelta(seconds=etime-stime)) #timedelta per la manipolazione dei tempi
-            #log_file.write("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__'] + "\t" + str(i['metric']['nodeId'])) + "\tDurata calcolo max, min, avg, dev_std per 12h:" + long_time + "\n")
-                    logger.info("\nTimestamp:" + str(datetime.now()) + "\tMetrica: " + str(i['metric']['__name__'] + "\t" + "Nodo: " + str(i['metric']['nodeId'])) + "\t" + "\tDurata forecasting e calcolo max, min, avg previsti nei prossimi 10min: " + long_time + "\n")
-            
+                    avg_pred = prediction.mean()              
 
                 #se con trend???
                 #if not st and seasonality_period == 0:
@@ -312,13 +317,12 @@ while True:
                 #se con trend e stagionalità
                 #provare con diskUsage che ha trend e stagionalità
                 else:
+                    print("SEASON")
 
-                    stime = time.perf_counter()
-
-                    pred_model_aa = ExponentialSmoothing(train_data,trend='add', seasonal='add', seasonality_period=seasonality_period).fit()
-                    pred_model_am = ExponentialSmoothing(train_data,trend='add', seasonal='mul', seasonality_period=seasonality_period).fit()
-                    pred_model_ma = ExponentialSmoothing(train_data,trend='mul', seasonal='add', seasonality_period=seasonality_period).fit()
-                    pred_model_mm = ExponentialSmoothing(train_data,trend='mul', seasonal='mul', seasonality_period=seasonality_period).fit()
+                    pred_model_aa = ExponentialSmoothing(train_data,trend='add', seasonal='add', seasonal_periods=seasonality_period).fit()
+                    pred_model_am = ExponentialSmoothing(train_data,trend='add', seasonal='mul', seasonal_periods=seasonality_period).fit()
+                    pred_model_ma = ExponentialSmoothing(train_data,trend='mul', seasonal='add', seasonal_periods=seasonality_period).fit()
+                    pred_model_mm = ExponentialSmoothing(train_data,trend='mul', seasonal='mul', seasonal_periods=seasonality_period).fit()
 
                     prediction_aa = pred_model_aa.forecast(10)
                     prediction_am = pred_model_am.forecast(10)
@@ -333,29 +337,31 @@ while True:
                     pred_model=""
                     if error1 < error2 and error1 < error3:
                         if error1 < error4:
-                            pred_model = ExponentialSmoothing(tsr,trend='add', seasonal='add', seasonality_period=seasonality_period).fit()
+                            pred_model = ExponentialSmoothing(tsr,trend='add', seasonal='add', seasonal_periods=seasonality_period).fit()
                         else:
-                            pred_model = ExponentialSmoothing(tsr,trend='mul', seasonal='mul', seasonality_period=seasonality_period).fit()
+                            pred_model = ExponentialSmoothing(tsr,trend='mul', seasonal='mul', seasonal_periods=seasonality_period).fit()
                     if error2 < error1 and error2 < error3:
                         if error2 < error4:
-                            pred_model = ExponentialSmoothing(tsr,trend='add', seasonal='mul', seasonality_period=seasonality_period).fit()
+                            pred_model = ExponentialSmoothing(tsr,trend='add', seasonal='mul', seasonal_periods=seasonality_period).fit()
                         else:
-                            pred_model = ExponentialSmoothing(tsr,trend='mul', seasonal='mul', seasonality_period=seasonality_period).fit()
+                            pred_model = ExponentialSmoothing(tsr,trend='mul', seasonal='mul', seasonal_periods=seasonality_period).fit()
                     if error3 < error1 and error3 < error2:
                         if error3 < error4:
-                            pred_model = ExponentialSmoothing(tsr,trend='mul', seasonal='add', seasonality_period=seasonality_period).fit()
+                            pred_model = ExponentialSmoothing(tsr,trend='mul', seasonal='add', seasonal_periods=seasonality_period).fit()
                         else:
-                            pred_model = ExponentialSmoothing(tsr,trend='mul', seasonal='mul', seasonality_period=seasonality_period).fit()
+                            pred_model = ExponentialSmoothing(tsr,trend='mul', seasonal='mul', seasonal_periods=seasonality_period).fit()
 
                     prediction = pred_model.forecast(10)
                     max_pred = prediction.max()
                     min_pred = prediction.min()
                     avg_pred = prediction.mean()
+                    
 
-                    etime = time.perf_counter() #mi prendo il tempo esatto di quando ho finito queste operazioni
-                    long_time = str(timedelta(seconds=etime-stime)) #timedelta per la manipolazione dei tempi
-            #log_file.write("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__'] + "\t" + str(i['metric']['nodeId'])) + "\tDurata calcolo max, min, avg, dev_std per 12h:" + long_time + "\n")
-                    logger.info("\nTimestamp:" + str(datetime.now()) + "\tMetrica: " + str(i['metric']['__name__'] + "\t" + "Nodo: " + str(i['metric']['nodeId'])) + "\t" + "\tDurata forecasting e calcolo max, min, avg previsti nei prossimi 10min: " + long_time + "\n")
+
+                etime = time.perf_counter() #mi prendo il tempo esatto di quando ho finito queste operazioni
+                long_time = str(timedelta(seconds=etime-stime)) #timedelta per la manipolazione dei tempi
+                #log_file.write("\nTimestamp:" + str(datetime.now()) + "\tMetrica:" + str(i['metric']['__name__'] + "\t" + str(i['metric']['nodeId'])) + "\tDurata calcolo max, min, avg, dev_std per 12h:" + long_time + "\n")
+                logger.info("\nTimestamp:" + str(datetime.now()) + "\tMetrica: " + str(i['metric']['__name__'] + "\t" + "Nodo: " + str(i['metric']['nodeId'])) + "\t" + "\tDurata forecasting e calcolo max, min, avg previsti nei prossimi 10min: " + long_time + "\n")
             
 
 
@@ -395,7 +401,7 @@ while True:
                 print("Errore: ",e)
             producer.poll(0) #timeout impostato su 0 quindi la poll ritorna immediatamente
 
-        time.sleep(120)
+    time.sleep(60) #ricomincia le query dopo 5min
 
 
 
