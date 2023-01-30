@@ -7,3 +7,5 @@ pip install -U scikit-learn
 pip install confluent-kafka
 
 pip install mysql-connector-python
+
+pip install schedule
