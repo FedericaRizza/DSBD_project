@@ -31,7 +31,7 @@ logger.setLevel(logging.INFO)
 handler = RotatingFileHandler('metric_log.log', mode="a", maxBytes=100*1024*1024, backupCount=2) #il file pesa al massimo 100mb, quelli più vecchi li scarta
 logger.addHandler(handler)
 
-metric_set = ["cpuLoad", "cpuTemp", "diskUsage"]
+metric_set = ["cpuLoad", "cpuTemp", "diskUsage", "availableMem", "realUsedMem", "networkThroughput", "inodeUsage"]
 
 #%matplotlib inline
 
@@ -102,7 +102,13 @@ def run_thread(func, args):
 log_file=open("log.txt","a") #apriamo il file log in modalità append in modo da scrivere in coda al contenuto attuale del file
 '''
 
-def metadata(metric_set, logger):
+
+def metadata(metric_set):
+
+    logger = logging.getLogger('my_logger')
+    logger.setLevel(logging.INFO)
+    handler = RotatingFileHandler('metric_log.log', mode="a", maxBytes=100*1024*1024, backupCount=2) #il file pesa al massimo 100mb, quelli più vecchi li scarta
+    logger.addHandler(handler)
 
     label_config =  {'job' : 'summary'} # {} {'nodeName': 'sv192'} 
     start_time = parse_datetime("1w") 
@@ -117,6 +123,9 @@ def metadata(metric_set, logger):
         except Exception as prom_err:
             print("Errore: ", prom_err)
             time.sleep(5)
+
+    configuration = {'bootstrap.servers': 'broker_kafka:9092'}
+    topic = "prometheusdata" 
 
     while True:
         try: 
@@ -256,6 +265,7 @@ def etl():
 
     configuration = {'bootstrap.servers': 'broker_kafka:9092'}
     topic = "prometheusdata" 
+
     while True:
         try: 
             producer = Producer(**configuration)
@@ -282,7 +292,7 @@ def etl():
 
     thread = threading.Thread(target=metadata, args = [metric_set], daemon= True)
     thread.start()
-    schedule.every().day.do(run_thread, metadata, [metric_set,logger])
+    schedule.every().day.do(run_thread, metadata, [metric_set])
 
     while True:        
         schedule.run_pending()

@@ -23,7 +23,7 @@ services:
     container_name: db
 
   
-
+  
   broker_kafka:
     image: confluentinc/cp-kafka:latest
     ports:

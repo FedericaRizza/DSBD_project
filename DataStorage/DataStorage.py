@@ -1,4 +1,4 @@
-from confluent_kafka import Consumer
+from confluent_kafka import Consumer, KafkaException
 import json
 import mysql.connector
 import time
@@ -38,7 +38,17 @@ consumer = Consumer({
 cursor = db.cursor()
 
 #iscrizione al topic
-consumer.subscribe(['prometheusdata'])
+while True:
+    try:
+        consumer.subscribe(['prometheusdata'])
+        print("Subscribe ok")
+        break
+    except KafkaException as kafkae:
+        if not(kafkae.args[0].retriable()):
+            print("Non retriable error!")
+            exit(1)
+        print("Retriable error!")
+        time.sleep(5)
 
 #total_count = 0
 try:

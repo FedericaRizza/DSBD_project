@@ -3,7 +3,7 @@ RUN pip install prometheus_api_client confluent-kafka mysql-connector-python
 
 WORKDIR /usr/src/app
 
-COPY DataStorage.py .
+COPY DataStorage2.py .
 
 ENTRYPOINT ["python"]
-CMD ["DataStorage.py"]
+CMD ["DataStorage2.py"]

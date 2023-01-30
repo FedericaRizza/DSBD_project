@@ -55,10 +55,10 @@ def invalid_route():
 @app.route("/metrics_available")
 def metriche_disponibili():
     #TODO sistemare sto controllo 
-    '''try:
+    try:
         db.ping(reconnect=False, attempts = 1, delay=0)
     except:
-       return "Gateway Timeout! DB not available.", 504'''
+       return "Gateway Timeout! DB not available.", 504
     try:
         cursor.execute("SELECT ID_metrica, metric_name FROM datas")
         metrics_available  = cursor.fetchall()
