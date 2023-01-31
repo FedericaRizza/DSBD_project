@@ -39,8 +39,6 @@ try:
             data = json.loads(record_value) 
             
             if data['datatype'] == "data":
-                print(data['metric_name'])
-                print("lunghezza", len(data['metric_name']))
 
                 sql = """INSERT INTO datas (
                     metric_name,  
@@ -63,13 +61,12 @@ try:
                 try:
                     cursor.execute(sql, val) 
                     db.commit()
+                    print("insert datas ok!")  
                 except Exception as sql_execute_err:
                     print("Errore: ", sql_execute_err)
-                print("insert datas ok!")  
 
             if data['datatype'] == "metadata":
                 acf_data = data['autocorrelazione']
-                print (acf_data)
                 sql = """INSERT INTO datas (metric_name, stazionarieta, stagionalita) VALUES (%s, %s, %s)
                     ON DUPLICATE KEY UPDATE stazionarieta = %s, stagionalita = %s;"""
                 val = (json.dumps(data['metric_name']), data['stazionarieta'], data['stagionalita'], data['stazionarieta'], data['stagionalita'])
@@ -92,14 +89,12 @@ try:
                     sql1 = """INSERT INTO acf (ID_metrica, acf_lag, acf_value)
                             VALUES (%s, %s, %s)"""                            
                     val1 = (last_id, item, acf_data[item])
-                    print(item)
-                    print(last_id)
                     try:
                         cursor.execute(sql1, val1) 
                         db.commit()
                     except Exception as sql_execute_err:
                         print("Errore: ", sql_execute_err)
-                    print("insert acf ok!") 
+                print("insert acf ok!") 
                 print("insert metadatas ok!")
                 
 except KeyboardInterrupt:

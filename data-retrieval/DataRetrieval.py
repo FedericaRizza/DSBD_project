@@ -1,7 +1,7 @@
 from flask import Flask
 
 import mysql.connector
-#from mysql.connector import errorcode
+
 import json
 import time
 
@@ -25,82 +25,104 @@ while True:
         print ("Error:", s)
         time.sleep(10)
 
-cursor = db.cursor()
-
-'''
-@app.errorhandler(404)
-def not_found(error=None):
-    message = {
-        'status': 404,
-        'message': 'Record not found: ' + request.url,
-    }
-    respone = jsonify(message)
-    respone.status_code = 404
-    return respone
-'''
 
 
-'''
-@app.errorhandler(404) 
-def invalid_route(): 
-    return "404 Not Found!."
-'''
 
-
-#---QUERY DI TUTTE LE METRICHE DISPONIBILI IN PROMETHEUS-----------------------------------
+#---QUERY DI TUTTE LE METRICHE DISPONIBILI IN PROMETHEUS---------
 @app.route("/metrics_available")
 def metriche_disponibili():
-    #TODO sistemare sto controllo 
+    while True:
+        try:
+            db = mysql.connector.connect( 
+            host = "db",
+            user = "user",
+            password = "password",
+            database="prometheus_data"
+            )
+            break
+        except Exception as sqlerr:
+            print("Errore: ", sqlerr)
+            time.sleep(10)
+    cursor = db.cursor()  
     try:
         db.ping(reconnect=False, attempts = 1, delay=0)
     except:
-       return "Gateway Timeout! DB not available.", 504
+        cursor.close()
+        return "DB not available.", 504
     try:
         cursor.execute("SELECT ID_metrica, metric_name FROM datas")
         metrics_available  = cursor.fetchall()
+        cursor.close()
     except mysql.connector.Error as sql_execute_err:
+        cursor.close()
         print("Errore:", sql_execute_err) 
-    #print(metrics_available)
-    #db.commit() #credo non ci sia di bisogno 
     return json.dumps(metrics_available)
 
 
 
 
-#---QUERY DEI METADATI PER LA METRICA CON ID_metrica = id-----------------------------------
+#---QUERY DEI METADATI PER LA METRICA CON ID_metrica = id----------
 @app.route("/metrics_available/<id_metrica>/metadata")
 def metadata(id_metrica):
-    #global metadati 
+    while True:
+        try:
+            db = mysql.connector.connect( 
+            host = "db",
+            user = "user",
+            password = "password",
+            database="prometheus_data"
+            )
+            break
+        except Exception as sqlerr:
+            print("Errore: ", sqlerr)
+            time.sleep(10) 
+    cursor = db.cursor()
     try:
         db.ping(reconnect=False, attempts = 1, delay=0)
     except:
-       return "Gateway Timeout! DB not available.", 504
+        cursor.close()
+        return "DB not available.", 504
     try:
         sql = ("""SELECT acf.acf_lag, acf.acf_value, datas.stazionarieta, datas.stagionalita 
                 FROM datas 
                 INNER JOIN acf ON datas.ID_metrica = acf.ID_metrica 
                 WHERE datas.ID_metrica = %s""")
-        val = [id_metrica] #ci voglio le quadre oppure tonda e , 
+        val = [id_metrica]  
         cursor.execute(sql, val)
         metadati = cursor.fetchall()
+        cursor.close()
         if metadati == None:
             return "Metric not available!", 400
         return json.dumps(metadati)
     except mysql.connector.Error as sql_execute_err:
-        #db.rollback()
+        cursor.close()
         print(sql_execute_err)
         return "Errore!"
     
-    #qui bisogna cambiare, servirà fare un join per prendere il valore di autocorrelazione
+   
 
 
-#---QUERY DEI VALORI MAX, MIN, AVG, DEV_STD PER LE ULTIME 1,3,12 ORE-----------------------------------
+#---QUERY DEI VALORI MAX, MIN, AVG, DEV_STD PER LE ULTIME 1,3,12 ORE------------
 @app.route("/metrics_available/<id_metrica>/values")
 def valori(id_metrica):
+    while True:
+        try:
+            db = mysql.connector.connect( 
+            host = "db",
+            user = "user",
+            password = "password",
+            database="prometheus_data"
+            )
+            break
+        except Exception as sqlerr:
+            print("Errore: ", sqlerr)
+            time.sleep(10)
+    cursor = db.cursor()  
     try:
         db.ping(reconnect=False, attempts = 1, delay=0)
     except:
-       return "Gateway Timeout! DB not available.", 504
+        cursor.close()
+        return "DB not available.", 504
     try:
         sql = ("SELECT max_1h, max_3h, max_12h, min_1h, min_3h, min_12h, avg_1h, avg_3h, avg_12h, devstd_1h, devstd_3h, devstd_12h FROM datas WHERE ID_metrica = %s")
         val = [id_metrica]
@@ -114,8 +136,10 @@ def valori(id_metrica):
             for k in range (len(values)):
                 for j in range(len(values[k])):
                     val_dict[descr[j][0]] = values[k][j]
+        cursor.close()
         return json.dumps(val_dict)
     except mysql.connector.Error as sql_execute_err:
+        cursor.close()
         print(sql_execute_err)
         return "Errore!"  
     
@@ -123,13 +147,26 @@ def valori(id_metrica):
 
 
 
-#---QUERY DEI VALORI PREDETTI-------------------------------------------------------------
+#---QUERY DEI VALORI PREDETTI------------------------------------------------------
 @app.route("/metrics_available/<id_metrica>/prediction_values")
 def prediction(id_metrica):
+    while True:
+        try:
+            db = mysql.connector.connect( 
+            host = "db",
+            user = "user",
+            password = "password",
+            database="prometheus_data"
+            )
+            break
+        except Exception as sqlerr:
+            print("Errore: ", sqlerr)
+            time.sleep(10)
+    cursor = db.cursor()          
     try:
         db.ping(reconnect=False, attempts = 1, delay=0)
     except:
-       return "Gateway Timeout! DB not available.", 504
+       return "DB not available.", 504
     try:
         sql = ("SELECT max_predicted, min_predicted , avg_predicted FROM datas WHERE ID_metrica = %s")
         cursor.execute(sql,[id_metrica])
@@ -142,10 +179,9 @@ def prediction(id_metrica):
             for k in range (len(prediction_values)):
                 for j in range(len(prediction_values[k])):
                     val_dict[descr[j][0]] = prediction_values[k][j]
+        cursor.close()
         return json.dumps(val_dict)
-        #return json.dumps(prediction_values)
     except mysql.connector.Error as sql_execute_err:
+        cursor.close()
         print(sql_execute_err)
         return "Errore!"  
-
-cursor.close

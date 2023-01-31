@@ -1,8 +1,0 @@
-pip install mysql-connector-python
-
-pip install grpcio
-
-pip install grpcio-tools
-
-Per generare le lib dal file .proto , eseguire nella stessa cartella:
-    python -m grpc_tools.protoc -I ./ --python_out=. --pyi_out=. --grpc_python_out=. ./sla.proto

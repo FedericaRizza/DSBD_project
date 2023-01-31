@@ -10,8 +10,6 @@ services:
   prometheus_data:
     image: mysql
     restart: always
-    ports:
-      - 3307:3306 #non serve esporre il db all'esterno, solo i microservizi devono poter collegarsi, fare expose
     environment:
       MYSQL_DATABASE: prometheus_data
       MYSQL_USER: user
@@ -21,13 +19,9 @@ services:
       - ./DataStorage/database.sql:/docker-entrypoint-initdb.d/database.sql
       - db_data:/var/lib/mysql
     container_name: db
-
-  
   
   broker_kafka:
     image: confluentinc/cp-kafka:latest
-    ports:
-      - 29092:29092 #non serve se tutti i container sono nella stessa rete, fare expose(forse)
     depends_on:
       - zookeeper
     environment:
@@ -53,44 +47,35 @@ services:
 
       kafka-topics --bootstrap-server broker_kafka:9092 --list
       "
-    tty: true #altrimenti esce subito, è come scrivere -t, insieme a stdin_open per avere una shell interattiva
+    tty: true 
     stdin_open: true
   
   etl_datapipeline:
-    build: ./ETLdatapipeline #cambiare con build: ./ETLdatapipeline
+    build: ./ETLdatapipeline 
     depends_on:
       - broker_kafka
     volumes: 
       - ./ETLdatapipeline:/usr/src/app/
-    #  - "./ETLdatapipeline:/file"
-    #command: ["/file/ETLDataPipeline.py"] #basta nel dockerfile?
     tty: true
     stdin_open: true
     container_name: etl_datapipeline
   
   datastorage:
-    build: ./DataStorage #cambiare con build: ./DataStorage
+    build: ./DataStorage 
     depends_on:
       - prometheus_data
       - broker_kafka
-    #volumes: #togliere?
-    #  - "./DataStorage:/file"
-    #command: ["/file/DataStorage.py"] #aggiungere COPY DataStorage.py . nel dockerfile?
     tty: true
     stdin_open: true
     stop_signal: SIGINT
     container_name: datastorage
 
   dataretrieval:
-    build: ./data-retrieval #cambiare con build: ./data-retrieval
+    build: ./data-retrieval 
     depends_on:
       - prometheus_data
     ports:
       - 80:5000
-    #stop_signal: SIGINT
-    #volumes: #togliere?
-    #- "./data-retrieval:/usr/src/app"
-    #command: ["/file/DataRetrieval.py"]
     tty: true
     stdin_open: true
     container_name: dataretrieval
@@ -99,7 +84,7 @@ services:
     build: ./SLAmanager
     depends_on:
       - prometheus_data
-    ports: #ports espone la porta del container all'host, expose solo tra i container della rete
+    ports: 
       - 50051:50051
     tty: true
     stdin_open: true

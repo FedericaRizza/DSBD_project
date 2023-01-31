@@ -1,6 +1,0 @@
-per confluent kafka:
-    usare python3.9 --> lo installiamo direttamente nel dockerfile da FROM
-
-per il database mysql
-    pip3 install mysql-connector-python
-    

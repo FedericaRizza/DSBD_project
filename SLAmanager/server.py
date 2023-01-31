@@ -5,7 +5,7 @@ import mysql.connector
 import grpc
 import sla_pb2
 import sla_pb2_grpc
-#-----
+
 import time
 
 class SlaService(sla_pb2_grpc.SlaServiceServicer):
@@ -13,7 +13,7 @@ class SlaService(sla_pb2_grpc.SlaServiceServicer):
     def SetSla(self, request, context):
         sql= "SELECT metric_name FROM datas WHERE metric_name LIKE %s LIMIT 1"
         val=['%"'+request.metric_name+'"%']
-        print(f'{request.metric_name} {request.min} {request.max}')
+        print(f'metrica inserita: {request.metric_name} {request.min} {request.max}')
         try:
             db.ping()
             cursor = db.cursor()
@@ -64,7 +64,7 @@ class SlaService(sla_pb2_grpc.SlaServiceServicer):
             cursor = db.cursor()
             cursor.execute(sql) 
             list = cursor.fetchall() 
-            print('list: ',list)
+            print('SLA set: ',list)
             cursor.close()
         except Exception as sql_execute_err:
             print("Errore: ", sql_execute_err)
@@ -172,7 +172,7 @@ def dbconnect():
         try:
             db = mysql.connector.connect(
                 host = "db",
-                user = "user", #va bene lo stesso user di datastorage?
+                user = "user", 
                 password = "password",
                 database = "prometheus_data"
             )
