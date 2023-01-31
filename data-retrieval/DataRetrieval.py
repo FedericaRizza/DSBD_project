@@ -27,10 +27,6 @@ while True:
 
 cursor = db.cursor()
 
-@app.route("/prova")
-def prova():
-   return "ciao2"
-
 '''
 @app.errorhandler(404)
 def not_found(error=None):
@@ -80,7 +76,7 @@ def metadata(id_metrica):
     except:
        return "Gateway Timeout! DB not available.", 504
     try:
-        sql = ("""SELECT acf.acf_value, datas.stazionarieta, datas.stagionalita 
+        sql = ("""SELECT acf.acf_lag, acf.acf_value, datas.stazionarieta, datas.stagionalita 
                 FROM datas 
                 INNER JOIN acf ON datas.ID_metrica = acf.ID_metrica 
                 WHERE datas.ID_metrica = %s""")
@@ -112,7 +108,13 @@ def valori(id_metrica):
         values = cursor.fetchall()
         if values == None:
             return "Metric not available!", 400
-        return json.dumps(values)
+        descr = cursor.description
+        val_dict = {}
+        for i in range(len(descr)):
+            for k in range (len(values)):
+                for j in range(len(values[k])):
+                    val_dict[descr[j][0]] = values[k][j]
+        return json.dumps(val_dict)
     except mysql.connector.Error as sql_execute_err:
         print(sql_execute_err)
         return "Errore!"  
@@ -134,7 +136,14 @@ def prediction(id_metrica):
         prediction_values = cursor.fetchall()
         if prediction_values == None:
             return "Metric not available!", 400
-        return json.dumps(prediction_values)
+        descr = cursor.description
+        val_dict = {}
+        for i in range(len(descr)):
+            for k in range (len(prediction_values)):
+                for j in range(len(prediction_values[k])):
+                    val_dict[descr[j][0]] = prediction_values[k][j]
+        return json.dumps(val_dict)
+        #return json.dumps(prediction_values)
     except mysql.connector.Error as sql_execute_err:
         print(sql_execute_err)
         return "Errore!"  

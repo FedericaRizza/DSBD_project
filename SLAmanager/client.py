@@ -59,11 +59,10 @@ def GetFutureViolation():
 
 if __name__ == '__main__':
     logging.basicConfig()
-    #inizializzare channel qui e usarne uno solo? close all uscita
     while True:
-        i = input('1) Add sla  2) Print sla  3) Get Violation  4) Get Future Violation  0) Exit\n')
+        i = input('1) Aggiungi/modifica SLA  2) Mostra SLA  3) Mostra violazioni  4) Mostra violazioni future  0) Exit\n')
         if i=='1':
-            name, min, max=input("Inserire il nome della metrica, il minimo e il massimo\n").split()
+            name, min, max=input("Inserire il nome della metrica, il minimo e il massimo separati da spazi\n").split()
             response=SetSla(name, int(min), int(max))
             print(response.msg)
         elif i=='2':

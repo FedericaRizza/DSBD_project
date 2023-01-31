@@ -4,7 +4,7 @@ RUN pip install schedule prometheus_api_client confluent-kafka statsmodels mysql
 WORKDIR /usr/src/app
 
 
-COPY ETLDataPipeline2.py .
+COPY ETLDataPipeline.py .
 
 ENTRYPOINT [ "python" ]
-CMD ["ETLDataPipeline2.py"]
+CMD ["ETLDataPipeline.py"]

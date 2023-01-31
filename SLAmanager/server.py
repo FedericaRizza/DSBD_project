@@ -16,12 +16,15 @@ class SlaService(sla_pb2_grpc.SlaServiceServicer):
         print(f'{request.metric_name} {request.min} {request.max}')
         try:
             db.ping()
+            cursor = db.cursor()
             cursor.execute(sql,val)
             result=cursor.fetchone()
         except Exception as sql_execute_err:
             print("Errore: ", sql_execute_err)
+            cursor.close()
             return sla_pb2.SlaReply(msg=f'Errore: {sql_execute_err}, {type(sql_execute_err)}')
         if result == None:
+            cursor.close()
             return sla_pb2.SlaReply(msg=f'Non ci sono metriche disponibili chiamate {request.metric_name}')
             
         try:
@@ -29,6 +32,7 @@ class SlaService(sla_pb2_grpc.SlaServiceServicer):
             slalist= cursor.fetchall()
         except Exception as sql_execute_err:
             print("Errore: ", sql_execute_err)
+            cursor.close()
             return sla_pb2.SlaReply(msg=f'Errore: {sql_execute_err}, {type(sql_execute_err)}')
 
         if len(slalist) >=5:
@@ -48,19 +52,23 @@ class SlaService(sla_pb2_grpc.SlaServiceServicer):
             db.commit()
         except Exception as sql_execute_err:
             print("Errore: ", sql_execute_err)
+            cursor.close()
             return sla_pb2.SlaReply(msg=f'Errore: {sql_execute_err}, {type(sql_execute_err)}')
-        
+        cursor.close()
         return sla_pb2.SlaReply(msg=f'Valori per {request.metric_name} inseriti correttamente')
              
     def SlaStatus(self, request, context):
         sql = "SELECT * FROM sla"
         try:
             db.ping()
-            cursor.execute(sql) #, val)
-            list = cursor.fetchall() #torna una lista di tuple
+            cursor = db.cursor()
+            cursor.execute(sql) 
+            list = cursor.fetchall() 
             print('list: ',list)
+            cursor.close()
         except Exception as sql_execute_err:
             print("Errore: ", sql_execute_err)
+            cursor.close()
             return sla_pb2.SlaReply(msg=f'Errore: {sql_execute_err}, {type(sql_execute_err)}')
 
         msg =''
@@ -74,10 +82,12 @@ class SlaService(sla_pb2_grpc.SlaServiceServicer):
     def GetViolation(self, request, context):
         sql = "SELECT * FROM sla"
         try:
+            cursor = db.cursor()
             cursor.execute(sql)
             slalist= cursor.fetchall()
         except Exception as sql_err:
             print("Errore: ", sql_err)
+            cursor.close()
             yield sla_pb2.Violation(metric_name=f'Errore: {sql_err}', value=-1.0, num=-1)
         if len(slalist) == 0:
             yield sla_pb2.Violation(metric_name="Nessuna metrica inserita in SLA set", value=-1.0, num=-1)
@@ -89,6 +99,7 @@ class SlaService(sla_pb2_grpc.SlaServiceServicer):
                 values_list = cursor.fetchall()
             except Exception as sql_err:
                 print("Errore: ", sql_err)
+                cursor.close()
                 yield sla_pb2.Violation(metric_name=f'Errore: {sql_err}', value=-1.0, num=-1)
                 
             count = 0
@@ -118,13 +129,16 @@ class SlaService(sla_pb2_grpc.SlaServiceServicer):
                     count+=1
                     yield sla_pb2.Violation(metric_name=item[0], value=value, num=12)
             yield sla_pb2.Violation(metric_name=f'Violazioni di {metric[0]}', value=0.0, num=count)
+        cursor.close()
 
     def GetFutureViolation(self, request, context):
         sql = "SELECT * FROM sla"
         try:
+            cursor = db.cursor()
             cursor.execute(sql)
             slalist= cursor.fetchall()
         except Exception as sql_err:
+            cursor.close()
             print("Errore: ", sql_err)
             yield sla_pb2.Violation(metric_name=f'Errore: {sql_err}', value=-1.0, num=-1)
         if len(slalist) == 0:
@@ -137,6 +151,7 @@ class SlaService(sla_pb2_grpc.SlaServiceServicer):
                 value_list = cursor.fetchall()
             except Exception as sql_err:
                 print("Errore: ", sql_err)
+                cursor.close()
                 yield sla_pb2.Violation(metric_name=f'Errore: {sql_err}', value=-1.0, num=-1)
             
             count = 0
@@ -150,6 +165,7 @@ class SlaService(sla_pb2_grpc.SlaServiceServicer):
                     count += 1
                     yield sla_pb2.Violation(metric_name=item[0],value=value)
             yield sla_pb2.Violation(metric_name=f'Violazioni di {metric[0]} nei prossimi 10 minuti', value=0.0, num=count)
+        cursor.close()
 
 def dbconnect():
     while True:
@@ -165,8 +181,7 @@ def dbconnect():
         except Exception as sqlerr:
             print("Errore: ", sqlerr)
             time.sleep(10)
-    cursor = db.cursor()
-    return db, cursor
+    return db
 
 def serve():
     port = '50051'
@@ -179,7 +194,6 @@ def serve():
 
 
 if __name__ == '__main__':
-    logging.basicConfig()
     time.sleep(10)
-    db, cursor = dbconnect()
+    db = dbconnect()
     serve()
